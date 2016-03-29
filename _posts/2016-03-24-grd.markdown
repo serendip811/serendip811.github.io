@@ -1,30 +1,67 @@
 ---
 layout: post
-title:  "grd"
+title:  "Grd"
 date:   2016-03-24 20:59:20 +0900
 categories: jekyll update
+description: Flexbox를 이용한 심플한 Css Grid 프레임워크
 customjs:
  - http://code.jquery.com/jquery-1.4.2.min.js
 customcss:
  - /css/grd.css
 ---
-[github][grd-github]
-[github page][grd-github-io]
+<style type="text/css">
+  .Cell {
+    padding: 5px;
+  }
+</style>
+
+css3에서 지원하는 Flexbox를 이용해 grid를 구현한 간단한 css프레임워크.(프레임워크라고 할 것 까지도 없을 정도로 간단하지만...)[github][grd-github]에서 자세히 확인 할 수 있고 [github page][grd-github-io]에서 샘플을 볼 수 있다.
+
+Flexbox는 [Learn Layout][learnlayout]과 [Flexbox Froggy][flex-froggy]에서 배울 수 있다.
 
 ## Sample
-<div class="Grid">
-  <div class="Cell -3of12">this is 3of12 this is 3of12 this is 3of12 this is 3of12 this is 3of12</div>
-  <div class="Cell -9of12">this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12 this is 9of12</div>
+<div class="Grid -center">
+  서시
 </div>
+<div class="Grid -right">
+  <div class="Cell -3of12">
+    윤동주
+  </div>
+</div>
+<div class="Grid">
+  <div class="Cell -3of12">
+죽는 날까지 하늘을 우러러
+한 점 부끄럼 없기를,
+잎새에 이는 바람에도
+나는 괴로워했다.
+  </div>
+  <div class="Cell -9of12">
+별을 노래하는 마음으로
+모든 죽어가는 것을 사랑해야지
+그리고, 나한테 주어진 길을 걸어가야겠다.
 
+오늘 밤에도 별이 바람에 스치운다
+
+  </div>
+</div>
 
 ## Usage
 {% highlight html %}
+<div class="Grid -center">
+  서시
+</div>
+<div class="Grid -right">
+  <div class="Cell -3of12">
+    윤동주
+  </div>
+</div>
 <div class="Grid">
-  <div class="Cell -3of12">this is 3of12 ... this is 3of12</div>
-  <div class="Cell -9of12">this is 9of12 ... this is 9of12</div>
+  <div class="Cell -3of12">죽는 날까지 ...</div>
+  <div class="Cell -9of12">별을 노래하는...</div>
 </div>
 {% endhighlight %}
 
 [grd-github]: https://github.com/1000ch/grd
-[grd-github-io]:   http://1000ch.github.io/grd
+[grd-github-io]: http://1000ch.github.io/grd
+[learnlayout]: http://ko.learnlayout.com/flexbox.html
+[flex-froggy]: http://flexboxfroggy.com/#ko
