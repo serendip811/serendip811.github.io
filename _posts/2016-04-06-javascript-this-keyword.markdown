@@ -122,6 +122,6 @@ document.write(h() + "<br />");  //NaN
 //4 + 5 + undefined = NaN
 {% endhighlight %}
 
+from [github js-bits][github]
 
-[sample]: http://fezvrasta.github.io/popper.js/
-[github]: https://github.com/FezVrasta/popper.js
+[github]: https://github.com/vasanthk/js-bits
