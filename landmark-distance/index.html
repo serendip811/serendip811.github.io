@@ -6,34 +6,61 @@
 <meta name="theme-color" content="#05070a" />
 <title>Landmark Distance — Lotte World Tower</title>
 <style>
-:root{color-scheme:dark;--panel:rgba(8,12,18,.80)}
+:root{color-scheme:dark;--glass:rgba(8,11,16,.64);--line:rgba(255,255,255,.16)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070a;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Pretendard",sans-serif;color:#fff}
 button,input{font:inherit}
-#app{position:fixed;inset:0;background:#05070a}
-#stage{position:absolute;inset:0;overflow:hidden;touch-action:none;user-select:none}
+#app,#stage{position:fixed;inset:0}
+#stage{overflow:hidden;touch-action:none;user-select:none;background:#05070a}
 #video,#photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#111;transform-origin:50% 50%;will-change:transform}
-#photo.show,#video.show{display:block}
-#shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.42),transparent 25%,transparent 68%,rgba(0,0,0,.68))}
-.topbar{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 14px) 18px 10px;z-index:30;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
-.brand{font-weight:750;letter-spacing:-.035em;font-size:17px;text-shadow:0 1px 12px #000}
-.brand small{display:block;margin-top:3px;font-size:11px;font-weight:500;color:rgba(255,255,255,.66);letter-spacing:.02em}
-.badge{padding:7px 10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(0,0,0,.34);backdrop-filter:blur(12px);font-size:11px;color:rgba(255,255,255,.76)}
-#empty{position:absolute;inset:0;display:grid;place-items:center;padding:36px;text-align:center;z-index:2;background:radial-gradient(circle at 50% 35%,#182333 0,#090d13 42%,#05070a 100%)}
-#empty.hidden{display:none}.emptyCard{max-width:330px;margin-top:-70px}.icon{width:74px;height:74px;border-radius:24px;margin:0 auto 18px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:31px}.emptyCard h1{font-size:27px;line-height:1.08;margin:0 0 10px;letter-spacing:-.045em}.emptyCard p{font-size:14px;line-height:1.55;margin:0;color:rgba(255,255,255,.62)}
-#result{position:absolute;left:18px;right:18px;top:calc(env(safe-area-inset-top) + 82px);z-index:25;display:none;pointer-events:none;text-align:center;text-shadow:0 2px 16px #000}
-#result.show{display:block}.distanceLabel{font-size:12px;color:rgba(255,255,255,.72);margin-bottom:3px}#distance{font-size:46px;font-weight:780;letter-spacing:-.055em;line-height:1}#distance span{font-size:18px;font-weight:650;margin-left:4px;color:rgba(255,255,255,.82)}#accuracy{margin-top:7px;font-size:10.5px;color:rgba(255,255,255,.56)}
-#towerWrap{position:absolute;width:112px;height:520px;left:50%;top:46%;transform:translate(-50%,-50%) scale(.35);transform-origin:50% 50%;z-index:8;display:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.7));will-change:transform}
-#towerWrap.show{display:block}#towerVisible{position:absolute;inset:0;overflow:visible;will-change:clip-path}#towerVisible svg{width:100%;height:100%;overflow:visible}.guide{fill:rgba(255,255,255,.035);stroke:#fff;stroke-width:2.2;vector-effect:non-scaling-stroke}.cross{stroke:rgba(255,255,255,.62);stroke-width:1.2;vector-effect:non-scaling-stroke}
-#occControls{position:absolute;inset:0;z-index:15;display:none;pointer-events:none}#occControls.show{display:block}#occBar{position:absolute;height:1px;background:rgba(255,255,255,.72);transform-origin:0 50%;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
-.occHandle{position:absolute;width:44px;height:44px;border:0;background:transparent;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;padding:0}
-.occHandle::before{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.72);background:rgba(7,10,14,.58);backdrop-filter:blur(7px);box-shadow:0 4px 14px rgba(0,0,0,.35)}
-.occHandle::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;transform:translate(-50%,-50%);border-radius:50%;background:#fff}
-#hint{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 148px);transform:translateX(-50%);z-index:26;background:rgba(0,0,0,.50);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(14px);border-radius:999px;padding:7px 11px;font-size:11px;color:rgba(255,255,255,.86);white-space:nowrap;display:none;pointer-events:none}#hint.show{display:block}
-#zoomControl{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);transform:translateX(-50%);z-index:38;display:none;gap:5px;padding:5px;border-radius:999px;background:rgba(7,10,14,.66);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(16px)}#zoomControl.show{display:flex}.zoomBtn{width:42px;height:32px;border:0;border-radius:999px;background:transparent;color:rgba(255,255,255,.7);font-size:12px;font-weight:700}.zoomBtn.active{background:#fff;color:#0b0d10}.zoomBtn:disabled{opacity:.3}
-.panel{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:40;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:10px;backdrop-filter:blur(24px) saturate(1.25);box-shadow:0 18px 55px rgba(0,0,0,.35)}
-.row{display:flex;gap:8px;align-items:center}.btn{height:48px;border:0;border-radius:16px;padding:0 16px;background:rgba(255,255,255,.1);color:#fff;font-weight:650;font-size:14px;display:flex;align-items:center;justify-content:center;white-space:nowrap}.btn:active{transform:scale(.98)}.btn.primary{flex:1;background:#fff;color:#0b0d10}.btn.iconBtn{width:48px;padding:0;font-size:18px}#fileInput{display:none}
-details{margin-top:8px;border-top:1px solid rgba(255,255,255,.09);padding:8px 8px 0}summary{list-style:none;font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;padding:2px 0 5px}summary::-webkit-details-marker{display:none}.control{display:grid;grid-template-columns:78px 1fr 48px;gap:8px;align-items:center;margin:8px 0;font-size:12px;color:rgba(255,255,255,.68)}.control output{text-align:right;color:rgba(255,255,255,.9);font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#fff}.note{font-size:10.5px;line-height:1.45;color:rgba(255,255,255,.44);padding:3px 0 2px}
+#video.show,#photo.show{display:block}
+#empty{position:absolute;inset:0;display:grid;place-items:center;padding:32px;text-align:center;background:radial-gradient(circle at 50% 35%,#172231 0,#090d13 44%,#05070a 100%)}
+#empty.hidden{display:none}
+#empty h1{margin:0 0 9px;font-size:25px;letter-spacing:-.045em}#empty p{margin:0;color:rgba(255,255,255,.58);font-size:13px;line-height:1.55}
+#shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.26),transparent 20%,transparent 74%,rgba(0,0,0,.28))}
+
+/* intentionally tiny chrome: keep the camera view clear */
+.topLeft{position:absolute;left:14px;top:calc(env(safe-area-inset-top) + 12px);z-index:25;font-size:11px;font-weight:700;letter-spacing:.025em;text-shadow:0 1px 10px #000;pointer-events:none}
+.topLeft span{display:block;margin-top:2px;font-size:9px;font-weight:500;color:rgba(255,255,255,.55)}
+.gps{position:absolute;right:14px;top:calc(env(safe-area-inset-top) + 12px);z-index:25;padding:5px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);backdrop-filter:blur(10px);font-size:9px;color:rgba(255,255,255,.66);pointer-events:none}
+
+#result{position:absolute;top:calc(env(safe-area-inset-top) + 52px);left:50%;transform:translateX(-50%);z-index:24;display:none;min-width:112px;padding:7px 12px 8px;border-radius:16px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(10px);text-align:center;pointer-events:none;text-shadow:0 1px 10px #000}
+#result.show{display:block}
+#distance{font-size:31px;font-weight:780;line-height:1;letter-spacing:-.05em}#distance span{font-size:13px;margin-left:3px;font-weight:650;color:rgba(255,255,255,.78)}
+#meta{margin-top:3px;font-size:9px;color:rgba(255,255,255,.52)}
+
+#towerWrap{position:absolute;width:112px;height:520px;left:50%;top:44%;transform:translate(-50%,-50%) scale(.35);transform-origin:50% 50%;z-index:8;display:none;filter:drop-shadow(0 3px 10px rgba(0,0,0,.55));will-change:transform}
+#towerWrap.show{display:block}
+#towerVisible{position:absolute;inset:0;will-change:clip-path}
+#towerVisible svg{width:100%;height:100%;overflow:visible}
+.guide{fill:rgba(255,255,255,.018);stroke:#fff;stroke-width:2;vector-effect:non-scaling-stroke}
+.cross{stroke:rgba(255,255,255,.6);stroke-width:1;vector-effect:non-scaling-stroke}
+
+#occControls{position:absolute;inset:0;z-index:15;display:none;pointer-events:none}
+#occControls.show{display:block}
+#occBar{position:absolute;height:1px;background:rgba(255,255,255,.66);transform-origin:0 50%;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.2)}
+.occHandle{position:absolute;width:42px;height:42px;border:0;background:transparent;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none;padding:0}
+.occHandle::before{content:"";position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.72);background:rgba(5,8,12,.56);backdrop-filter:blur(6px)}
+.occHandle::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;transform:translate(-50%,-50%);border-radius:50%;background:#fff}
+
+/* one compact toolbar only */
+#toolbar{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 10px);transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:7px;padding:7px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(20px) saturate(1.2);box-shadow:0 10px 35px rgba(0,0,0,.28)}
+.tool{width:46px;height:46px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.10);color:#fff;font-size:15px;font-weight:700;padding:0}
+.tool:active{transform:scale(.96)}
+#cameraBtn{width:54px;height:54px;background:#fff;color:#090c10;font-size:18px}
+#cameraBtn.on{box-shadow:0 0 0 3px rgba(66,220,120,.28)}
+#zoomBtn{font-size:13px;font-variant-numeric:tabular-nums}
+#fileInput{display:none}
+
+/* calibration only appears on demand */
+#sheetBackdrop{position:absolute;inset:0;z-index:48;background:rgba(0,0,0,.22);display:none}
+#sheetBackdrop.show{display:block}
+#sheet{position:absolute;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);z-index:50;display:none;padding:14px 14px 12px;border-radius:24px;background:rgba(10,13,18,.92);border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(26px);box-shadow:0 18px 60px rgba(0,0,0,.45)}
+#sheet.show{display:block}
+.sheetHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.sheetHead strong{font-size:14px}.closeBtn{width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:17px}
+.control{display:grid;grid-template-columns:72px 1fr 46px;gap:8px;align-items:center;margin:11px 0;font-size:12px;color:rgba(255,255,255,.68)}
+.control output{text-align:right;color:#fff;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#fff}
+.note{font-size:10px;line-height:1.45;color:rgba(255,255,255,.4);margin-top:8px}
 </style>
 </head>
 <body>
@@ -41,46 +68,64 @@ details{margin-top:8px;border-top:1px solid rgba(255,255,255,.09);padding:8px 8p
   <div id="stage">
     <video id="video" autoplay playsinline muted></video>
     <img id="photo" alt="선택한 사진" />
-    <div id="empty"><div class="emptyCard"><div class="icon">⌁</div><h1>랜드마크까지<br>얼마나 멀까?</h1><p>GPS 없이, 화면에 보이는 롯데월드타워의 크기로 거리를 추정하는 실험입니다.</p></div></div>
+    <div id="empty"><div><h1>랜드마크 거리</h1><p>GPS 없이 롯데월드타워의 겉보기 크기로<br>거리를 추정하는 실험입니다.</p></div></div>
     <div id="shade"></div>
-    <div class="topbar"><div class="brand">LANDMARK DISTANCE<small>LOTTE WORLD TOWER · 555 m</small></div><div class="badge">GPS OFF</div></div>
-    <div id="result"><div class="distanceLabel">롯데월드타워까지 약</div><div id="distance">—</div><div id="accuracy">1× · 실험용 추정치</div></div>
-    <div id="hint">타워 윤곽을 맞추고, 양쪽 점으로 가려진 부분만 조절하세요</div>
-    <div id="towerWrap" aria-label="롯데월드타워 맞춤 가이드"><div id="towerVisible"><svg viewBox="0 0 112 520" xmlns="http://www.w3.org/2000/svg"><path class="guide" d="M56 4 C53 20 49 38 45 56 C41 77 38 101 35 128 C32 160 30 196 29 236 C28 278 28 318 27 352 C26 389 25 426 23 464 L20 512 L92 512 L89 464 C87 426 86 389 85 352 C84 318 84 278 83 236 C82 196 80 160 77 128 C74 101 71 77 67 56 C63 38 59 20 56 4 Z"/><line class="cross" x1="44" y1="4" x2="68" y2="4" /></svg></div></div>
+    <div class="topLeft">LANDMARK DISTANCE<span>LOTTE WORLD TOWER · 555 m</span></div>
+    <div class="gps">GPS OFF</div>
+    <div id="result"><div id="distance">—</div><div id="meta">1× · 실험용</div></div>
+
+    <div id="towerWrap"><div id="towerVisible"><svg viewBox="0 0 112 520" xmlns="http://www.w3.org/2000/svg"><path class="guide" d="M56 4 C53 20 49 38 45 56 C41 77 38 101 35 128 C32 160 30 196 29 236 C28 278 28 318 27 352 C26 389 25 426 23 464 L20 512 L92 512 L89 464 C87 426 86 389 85 352 C84 318 84 278 83 236 C82 196 80 160 77 128 C74 101 71 77 67 56 C63 38 59 20 56 4 Z"/><line class="cross" x1="44" y1="4" x2="68" y2="4"/></svg></div></div>
     <div id="occControls"><div id="occBar"></div><button id="occLeft" class="occHandle" data-side="left" aria-label="왼쪽 가림 경계"></button><button id="occRight" class="occHandle" data-side="right" aria-label="오른쪽 가림 경계"></button></div>
   </div>
-  <div id="zoomControl" aria-label="카메라 확대"><button class="zoomBtn active" data-zoom="1">1×</button><button class="zoomBtn" data-zoom="2">2×</button><button class="zoomBtn" data-zoom="3">3×</button><button class="zoomBtn" data-zoom="5">5×</button></div>
-  <div class="panel">
-    <div class="row"><button class="btn primary" id="cameraBtn">카메라 시작</button><button class="btn" id="photoBtn">사진</button><button class="btn iconBtn" id="resetBtn" aria-label="초기화">↺</button><input id="fileInput" type="file" accept="image/*" capture="environment" /></div>
-    <details id="settings"><summary>정확도 보정 ▾</summary><label class="control">세로 화각<input id="fov" type="range" min="35" max="75" step="0.5" value="50"><output id="fovOut">50°</output></label><label class="control">가이드 크기<input id="scale" type="range" min="0.05" max="1.8" step="0.005" value="0.35"><output id="scaleOut">35%</output></label><label class="control">가림 높이<input id="occ" type="range" min="0.18" max="0.96" step="0.005" value="0.62"><output id="occOut">62%</output></label><div class="note">확대 배율은 거리 계산에도 반영됩니다. 가림선 아래쪽은 거리 계산에서 제외되지 않고, 전체 타워 모델의 스케일을 추정하는 데만 사용합니다.</div></details>
+
+  <div id="toolbar">
+    <button class="tool" id="photoBtn" aria-label="사진">▧</button>
+    <button class="tool" id="zoomBtn" aria-label="확대">1×</button>
+    <button class="tool" id="cameraBtn" aria-label="카메라">●</button>
+    <button class="tool" id="resetBtn" aria-label="초기화">↺</button>
+    <button class="tool" id="settingsBtn" aria-label="설정">⚙︎</button>
+    <input id="fileInput" type="file" accept="image/*" capture="environment" />
+  </div>
+
+  <div id="sheetBackdrop"></div>
+  <div id="sheet" role="dialog" aria-modal="true">
+    <div class="sheetHead"><strong>정확도 보정</strong><button class="closeBtn" id="closeSheet">×</button></div>
+    <label class="control">세로 화각<input id="fov" type="range" min="35" max="75" step="0.5" value="50"><output id="fovOut">50°</output></label>
+    <label class="control">가이드 크기<input id="scale" type="range" min="0.05" max="1.8" step="0.005" value="0.35"><output id="scaleOut">35%</output></label>
+    <label class="control">가림 높이<input id="occ" type="range" min="0.18" max="0.96" step="0.005" value="0.62"><output id="occOut">62%</output></label>
+    <div class="note">측정 중에는 이 패널을 닫아 두면 됩니다. 화면에서는 가이드와 가림선만 남습니다.</div>
   </div>
 </div>
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const stage=$('stage'),video=$('video'),photo=$('photo'),empty=$('empty'),tower=$('towerWrap'),towerVisible=$('towerVisible'),occControls=$('occControls'),occBar=$('occBar'),occLeft=$('occLeft'),occRight=$('occRight'),hint=$('hint'),result=$('result'),distanceEl=$('distance'),accuracy=$('accuracy'),cameraBtn=$('cameraBtn'),photoBtn=$('photoBtn'),resetBtn=$('resetBtn'),fileInput=$('fileInput'),fov=$('fov'),fovOut=$('fovOut'),scaleRange=$('scale'),scaleOut=$('scaleOut'),occRange=$('occ'),occOut=$('occOut'),zoomControl=$('zoomControl'),settings=$('settings');
-const TOWER_HEIGHT_M=555,GUIDE_HEIGHT_PX=520;
-let x=innerWidth/2,y=innerHeight*.46,scale=.35,occL=.62,occR=.62,zoom=1,stream=null,cameraTrack=null,nativeZoomCap=null,nativeZoomActive=false,activeOccSide=null,dragOffset=null,lastPinchDistance=0,lastPinchMid=null;
-const pointers=new Map(),clamp=(v,min,max)=>Math.min(max,Math.max(min,v)),pointDistance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),midpoint=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
-function setMediaActive(active=true){empty.classList.toggle('hidden',active);tower.classList.toggle('show',active);occControls.classList.toggle('show',active);result.classList.toggle('show',active);zoomControl.classList.toggle('show',active);hint.classList.toggle('show',active);if(active)setTimeout(()=>hint.classList.remove('show'),3500)}
-function updateZoomButtons(){document.querySelectorAll('.zoomBtn').forEach(b=>{const z=Number(b.dataset.zoom);b.classList.toggle('active',Math.abs(z-zoom)<.05);if(nativeZoomCap)b.disabled=z>nativeZoomCap.max+0.01;else b.disabled=false})}
-async function setZoom(requested){let z=requested;if(nativeZoomCap)z=clamp(z,Math.max(1,nativeZoomCap.min||1),nativeZoomCap.max||5);else z=clamp(z,1,5);zoom=z;nativeZoomActive=false;if(cameraTrack&&nativeZoomCap){try{await cameraTrack.applyConstraints({advanced:[{zoom:z}]});nativeZoomActive=true}catch(e){nativeZoomActive=false}}video.style.transform=nativeZoomActive?'scale(1)':`scale(${z})`;photo.style.transform=`scale(${z})`;accuracy.textContent=`${z%1?z.toFixed(1):z}× 확대 · 실험용 추정치`;updateZoomButtons();updateDistance()}
-function resetGuide(){x=stage.clientWidth/2;y=stage.clientHeight*.46;scale=.35;occL=occR=.62;scaleRange.value=scale;occRange.value=.62;setZoom(1);render()}
-function updateDistance(){if(!tower.classList.contains('show'))return;const h=stage.clientHeight,vfov=Number(fov.value)*Math.PI/180,baseFocalPx=h/(2*Math.tan(vfov/2)),effectiveFocalPx=baseFocalPx*zoom,projectedTowerHeight=GUIDE_HEIGHT_PX*scale,distanceM=TOWER_HEIGHT_M*effectiveFocalPx/Math.max(1,projectedTowerHeight);distanceEl.innerHTML=distanceM>=1000?`${distanceM/1000<10?(distanceM/1000).toFixed(1):Math.round(distanceM/1000)}<span>km</span>`:`${Math.round(distanceM/10)*10}<span>m</span>`}
-function updateOcclusion(){const towerH=GUIDE_HEIGHT_PX*scale,towerTop=y-towerH/2,half=Math.max(52,112*scale*.82),x1=x-half,x2=x+half,y1=towerTop+towerH*occL,y2=towerTop+towerH*occR;occLeft.style.left=x1+'px';occLeft.style.top=y1+'px';occRight.style.left=x2+'px';occRight.style.top=y2+'px';const dx=x2-x1,dy=y2-y1;occBar.style.left=x1+'px';occBar.style.top=y1+'px';occBar.style.width=Math.hypot(dx,dy)+'px';occBar.style.transform=`rotate(${Math.atan2(dy,dx)*180/Math.PI}deg)`;towerVisible.style.clipPath=`polygon(0 0,100% 0,100% ${occR*100}%,0 ${occL*100}%)`;occRange.value=(occL+occR)/2;occOut.value=Math.round(((occL+occR)/2)*100)+'%'}
-function render(){tower.style.left=x+'px';tower.style.top=y+'px';tower.style.transform=`translate(-50%,-50%) scale(${scale})`;scaleRange.value=scale;scaleOut.value=Math.round(scale*100)+'%';fovOut.value=Number(fov.value).toFixed(Number(fov.value)%1?1:0)+'°';updateOcclusion();updateDistance()}
-async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('unsupported');if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});cameraTrack=stream.getVideoTracks()[0]||null;nativeZoomCap=null;try{const caps=cameraTrack?.getCapabilities?.();if(caps?.zoom&&Number.isFinite(caps.zoom.max))nativeZoomCap=caps.zoom}catch(e){}video.srcObject=stream;await video.play();photo.classList.remove('show');video.classList.add('show');setMediaActive(true);cameraBtn.textContent='카메라 켜짐';resetGuide()}catch(e){fileInput.click()}}
-function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}cameraTrack=null;nativeZoomCap=null;nativeZoomActive=false;video.srcObject=null;video.classList.remove('show');cameraBtn.textContent='카메라 시작'}
-cameraBtn.addEventListener('click',startCamera);photoBtn.addEventListener('click',()=>fileInput.click());resetBtn.addEventListener('click',resetGuide);document.querySelectorAll('.zoomBtn').forEach(b=>b.addEventListener('click',()=>setZoom(Number(b.dataset.zoom))));
-fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];if(!file)return;stopCamera();const url=URL.createObjectURL(file);photo.onload=()=>URL.revokeObjectURL(url);photo.src=url;photo.classList.add('show');setMediaActive(true);resetGuide()});
+const stage=$('stage'),video=$('video'),photo=$('photo'),empty=$('empty'),tower=$('towerWrap'),towerVisible=$('towerVisible'),occControls=$('occControls'),occBar=$('occBar'),occLeft=$('occLeft'),occRight=$('occRight'),result=$('result'),distanceEl=$('distance'),meta=$('meta'),photoBtn=$('photoBtn'),zoomBtn=$('zoomBtn'),cameraBtn=$('cameraBtn'),resetBtn=$('resetBtn'),settingsBtn=$('settingsBtn'),fileInput=$('fileInput'),sheet=$('sheet'),sheetBackdrop=$('sheetBackdrop'),closeSheet=$('closeSheet'),fov=$('fov'),fovOut=$('fovOut'),scaleRange=$('scale'),scaleOut=$('scaleOut'),occRange=$('occ'),occOut=$('occOut');
+const TOWER_HEIGHT_M=555,GUIDE_HEIGHT_PX=520,ZOOMS=[1,2,3,5];
+let x=innerWidth/2,y=innerHeight*.44,scale=.35,occL=.62,occR=.62,zoom=1,stream=null,cameraTrack=null,nativeZoomCap=null,nativeZoomActive=false,activeOccSide=null,dragOffset=null,lastPinchDistance=0,lastPinchMid=null;
+const pointers=new Map();
+const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+const pd=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+function mediaActive(active=true){empty.classList.toggle('hidden',active);tower.classList.toggle('show',active);occControls.classList.toggle('show',active);result.classList.toggle('show',active)}
+function render(){tower.style.left=x+'px';tower.style.top=y+'px';tower.style.transform=`translate(-50%,-50%) scale(${scale})`;scaleRange.value=scale;scaleOut.value=Math.round(scale*100)+'%';fovOut.value=Number(fov.value).toFixed(Number(fov.value)%1?1:0)+'°';updateOcc();updateDistance()}
+function updateDistance(){if(!tower.classList.contains('show'))return;const h=stage.clientHeight,vfov=Number(fov.value)*Math.PI/180,baseFocal=h/(2*Math.tan(vfov/2)),effectiveFocal=baseFocal*zoom,projected=GUIDE_HEIGHT_PX*scale,d=TOWER_HEIGHT_M*effectiveFocal/Math.max(projected,1);distanceEl.innerHTML=d>=1000?`${d/1000<10?(d/1000).toFixed(1):Math.round(d/1000)}<span>km</span>`:`${Math.round(d/10)*10}<span>m</span>`;meta.textContent=`${zoom}× · 실험용`}
+function updateOcc(){const th=GUIDE_HEIGHT_PX*scale,top=y-th/2,half=Math.max(55,112*scale*.9),x1=x-half,x2=x+half,y1=top+th*occL,y2=top+th*occR;occLeft.style.left=x1+'px';occLeft.style.top=y1+'px';occRight.style.left=x2+'px';occRight.style.top=y2+'px';const dx=x2-x1,dy=y2-y1;occBar.style.left=x1+'px';occBar.style.top=y1+'px';occBar.style.width=Math.hypot(dx,dy)+'px';occBar.style.transform=`rotate(${Math.atan2(dy,dx)*180/Math.PI}deg)`;towerVisible.style.clipPath=`polygon(0 0,100% 0,100% ${occR*100}%,0 ${occL*100}%)`;occRange.value=(occL+occR)/2;occOut.value=Math.round(((occL+occR)/2)*100)+'%'}
+async function setZoom(z){zoom=z;nativeZoomActive=false;if(cameraTrack&&nativeZoomCap){const target=clamp(z,Math.max(1,nativeZoomCap.min||1),nativeZoomCap.max||z);try{await cameraTrack.applyConstraints({advanced:[{zoom:target}]});nativeZoomActive=true;zoom=target}catch(e){nativeZoomActive=false}}video.style.transform=nativeZoomActive?'scale(1)':`scale(${zoom})`;photo.style.transform=`scale(${zoom})`;zoomBtn.textContent=(Number.isInteger(zoom)?zoom:zoom.toFixed(1))+'×';updateDistance()}
+async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw new Error();if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});video.srcObject=stream;await video.play();cameraTrack=stream.getVideoTracks()[0];nativeZoomCap=cameraTrack.getCapabilities?.().zoom?cameraTrack.getCapabilities().zoom:null;photo.classList.remove('show');video.classList.add('show');cameraBtn.classList.add('on');mediaActive(true);resetGuide()}catch(e){fileInput.click()}}
+function stopCamera(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;cameraTrack=null;nativeZoomCap=null;video.srcObject=null;video.classList.remove('show');cameraBtn.classList.remove('on')}
+function resetGuide(){x=stage.clientWidth/2;y=stage.clientHeight*.44;scale=.35;occL=occR=.62;scaleRange.value=scale;occRange.value=.62;setZoom(1);render()}
+function openSheet(){sheet.classList.add('show');sheetBackdrop.classList.add('show')}function hideSheet(){sheet.classList.remove('show');sheetBackdrop.classList.remove('show')}
+cameraBtn.addEventListener('click',()=>{if(stream)stopCamera();else startCamera()});
+photoBtn.addEventListener('click',()=>fileInput.click());resetBtn.addEventListener('click',resetGuide);settingsBtn.addEventListener('click',openSheet);closeSheet.addEventListener('click',hideSheet);sheetBackdrop.addEventListener('click',hideSheet);
+zoomBtn.addEventListener('click',()=>{const i=ZOOMS.indexOf(Number(zoom));setZoom(ZOOMS[(i+1+ZOOMS.length)%ZOOMS.length])});
+fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];if(!file)return;stopCamera();const url=URL.createObjectURL(file);photo.onload=()=>URL.revokeObjectURL(url);photo.src=url;photo.classList.add('show');mediaActive(true);resetGuide()});
 fov.addEventListener('input',render);scaleRange.addEventListener('input',()=>{scale=Number(scaleRange.value);render()});occRange.addEventListener('input',()=>{occL=occR=Number(occRange.value);render()});
-function beginOccDrag(e){e.preventDefault();e.stopPropagation();activeOccSide=e.currentTarget.dataset.side;e.currentTarget.setPointerCapture?.(e.pointerId)}occLeft.addEventListener('pointerdown',beginOccDrag);occRight.addEventListener('pointerdown',beginOccDrag);
-function moveOcc(e){if(!activeOccSide)return;const towerH=GUIDE_HEIGHT_PX*scale,towerTop=y-towerH/2,ratio=clamp((e.clientY-towerTop)/towerH,.18,.96);if(activeOccSide==='left')occL=ratio;else occR=ratio;render()}window.addEventListener('pointermove',moveOcc,{passive:false});window.addEventListener('pointerup',()=>activeOccSide=null);window.addEventListener('pointercancel',()=>activeOccSide=null);
-stage.addEventListener('pointerdown',e=>{if(!tower.classList.contains('show')||e.target.closest?.('.occHandle'))return;stage.setPointerCapture?.(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)dragOffset={x:e.clientX-x,y:e.clientY-y};else if(pointers.size===2){const[a,b]=[...pointers.values()];lastPinchDistance=pointDistance(a,b);lastPinchMid=midpoint(a,b);dragOffset=null}});
-stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId)||activeOccSide)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1&&dragOffset){x=e.clientX-dragOffset.x;y=e.clientY-dragOffset.y;render()}else if(pointers.size===2){const[a,b]=[...pointers.values()],d=pointDistance(a,b),mid=midpoint(a,b);if(lastPinchDistance>0)scale=clamp(scale*(d/lastPinchDistance),.05,1.8);if(lastPinchMid){x+=mid.x-lastPinchMid.x;y+=mid.y-lastPinchMid.y}lastPinchDistance=d;lastPinchMid=mid;render()}});
-function endPointer(e){pointers.delete(e.pointerId);if(pointers.size===0){dragOffset=null;lastPinchDistance=0;lastPinchMid=null}else if(pointers.size===1){const p=[...pointers.values()][0];dragOffset={x:p.x-x,y:p.y-y};lastPinchDistance=0;lastPinchMid=null}}stage.addEventListener('pointerup',endPointer);stage.addEventListener('pointercancel',endPointer);
-settings.addEventListener('toggle',()=>{zoomControl.style.opacity=settings.open?'.25':'1';zoomControl.style.pointerEvents=settings.open?'none':'auto'});
-window.addEventListener('resize',()=>{x=clamp(x,0,stage.clientWidth);y=clamp(y,0,stage.clientHeight);render()});render();
+function beginOcc(e){e.preventDefault();e.stopPropagation();activeOccSide=e.currentTarget.dataset.side;e.currentTarget.setPointerCapture?.(e.pointerId)}occLeft.addEventListener('pointerdown',beginOcc);occRight.addEventListener('pointerdown',beginOcc);
+window.addEventListener('pointermove',e=>{if(!activeOccSide)return;const th=GUIDE_HEIGHT_PX*scale,top=y-th/2,r=clamp((e.clientY-top)/th,.18,.96);if(activeOccSide==='left')occL=r;else occR=r;render()},{passive:false});window.addEventListener('pointerup',()=>activeOccSide=null);window.addEventListener('pointercancel',()=>activeOccSide=null);
+stage.addEventListener('pointerdown',e=>{if(!tower.classList.contains('show')||e.target.closest?.('.occHandle'))return;stage.setPointerCapture?.(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)dragOffset={x:e.clientX-x,y:e.clientY-y};else if(pointers.size===2){const[a,b]=[...pointers.values()];lastPinchDistance=pd(a,b);lastPinchMid=mid(a,b);dragOffset=null}});
+stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId)||activeOccSide)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1&&dragOffset){x=e.clientX-dragOffset.x;y=e.clientY-dragOffset.y;render()}else if(pointers.size===2){const[a,b]=[...pointers.values()],d=pd(a,b),m=mid(a,b);if(lastPinchDistance>0)scale=clamp(scale*(d/lastPinchDistance),.05,1.8);if(lastPinchMid){x+=m.x-lastPinchMid.x;y+=m.y-lastPinchMid.y}lastPinchDistance=d;lastPinchMid=m;render()}});
+function endPointer(e){pointers.delete(e.pointerId);if(!pointers.size){dragOffset=null;lastPinchDistance=0;lastPinchMid=null}else if(pointers.size===1){const p=[...pointers.values()][0];dragOffset={x:p.x-x,y:p.y-y};lastPinchDistance=0;lastPinchMid=null}}stage.addEventListener('pointerup',endPointer);stage.addEventListener('pointercancel',endPointer);
+window.addEventListener('resize',()=>{x=clamp(x,0,stage.clientWidth);y=clamp(y,0,stage.clientHeight);render()});
+render();
 })();
 </script>
 </body>
