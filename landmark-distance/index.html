@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#000" />
-<title>Landmark Finder — Lotte World Tower</title>
+<title>Landmark Finder — Seoul</title>
 <style>
 :root{color-scheme:dark;--glass:rgba(8,11,16,.58);--line:rgba(255,255,255,.18);--muted:rgba(255,255,255,.68)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -12,51 +12,60 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-f
 button{font:inherit}
 #app,#stage{position:fixed;inset:0;overflow:hidden;background:#000}
 #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
-#shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 25%,transparent 72%,rgba(0,0,0,.6))}
+#shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 25%,transparent 72%,rgba(0,0,0,.62))}
 .topbar{position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 16px) 18px 0;z-index:20;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
 .brand{font-size:14px;font-weight:760;letter-spacing:-.025em;text-shadow:0 2px 12px #000}.brand small{display:block;margin-top:3px;font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.02em}
 .gps{font-size:10px;padding:6px 9px;border-radius:999px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(14px);color:var(--muted)}
 #info{position:absolute;top:calc(env(safe-area-inset-top) + 72px);left:50%;transform:translateX(-50%);z-index:18;text-align:center;white-space:nowrap;text-shadow:0 2px 14px #000;pointer-events:none}
-#distance{font-size:34px;font-weight:780;letter-spacing:-.05em;line-height:1}#distance span{font-size:15px;margin-left:3px;color:rgba(255,255,255,.8)}
-#meta{margin-top:6px;font-size:11px;color:rgba(255,255,255,.65)}
-#marker{position:absolute;left:50%;top:51%;width:100px;height:360px;transform:translate(-50%,-50%);z-index:10;display:none;pointer-events:none;filter:drop-shadow(0 2px 10px rgba(0,0,0,.75))}
-#marker.show{display:block}#marker svg{width:100%;height:100%;overflow:visible}.tower{fill:rgba(255,255,255,.035);stroke:#fff;stroke-width:2.2;vector-effect:non-scaling-stroke}.centerline{stroke:rgba(255,255,255,.45);stroke-width:1;stroke-dasharray:4 5;vector-effect:non-scaling-stroke}
-#label{position:absolute;left:50%;top:-30px;transform:translateX(-50%);font-size:11px;font-weight:650;padding:6px 9px;border-radius:999px;background:rgba(0,0,0,.52);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);white-space:nowrap}
+#targetName{font-size:11px;color:rgba(255,255,255,.7);margin-bottom:3px}#distance{font-size:34px;font-weight:780;letter-spacing:-.05em;line-height:1}#distance span{font-size:15px;margin-left:3px;color:rgba(255,255,255,.8)}#meta{margin-top:6px;font-size:11px;color:rgba(255,255,255,.65)}
+.marker{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);z-index:10;display:none;pointer-events:none;filter:drop-shadow(0 2px 10px rgba(0,0,0,.75))}.marker.show{display:block}.marker svg{width:100%;height:100%;overflow:visible}.tower{fill:rgba(255,255,255,.035);stroke:#fff;stroke-width:2.2;vector-effect:non-scaling-stroke}.centerline{stroke:rgba(255,255,255,.38);stroke-width:1;stroke-dasharray:4 5;vector-effect:non-scaling-stroke}.markerLabel{position:absolute;left:50%;top:-28px;transform:translateX(-50%);font-size:10px;font-weight:650;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.54);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);white-space:nowrap}.marker.selected .tower{stroke-width:3}.marker.selected .markerLabel{background:rgba(255,255,255,.92);color:#0b0d10}
 #arrow{position:absolute;top:50%;z-index:12;display:none;align-items:center;gap:7px;padding:9px 12px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid var(--line);backdrop-filter:blur(14px);font-size:12px;font-weight:650;pointer-events:none;transform:translateY(-50%)}#arrow.show{display:flex}#arrow.left{left:14px}#arrow.right{right:14px}#arrowIcon{font-size:20px;line-height:1}
-#status{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);transform:translateX(-50%);z-index:22;max-width:88%;padding:8px 11px;border-radius:999px;background:rgba(0,0,0,.5);border:1px solid var(--line);backdrop-filter:blur(12px);font-size:11px;color:rgba(255,255,255,.75);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#selector{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 88px);z-index:25;display:flex;gap:7px;overflow-x:auto;padding:0 14px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}#selector::-webkit-scrollbar{display:none}.chip{flex:none;height:34px;border:1px solid var(--line);border-radius:999px;background:rgba(7,10,14,.6);backdrop-filter:blur(14px);color:rgba(255,255,255,.74);padding:0 12px;font-size:11px;font-weight:650}.chip.active{background:#fff;color:#0b0d10;border-color:#fff}
+#status{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 132px);transform:translateX(-50%);z-index:22;max-width:88%;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid var(--line);backdrop-filter:blur(12px);font-size:10.5px;color:rgba(255,255,255,.72);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 #start{position:absolute;left:18px;right:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);height:58px;border:0;border-radius:20px;background:#fff;color:#0b0d10;font-size:16px;font-weight:750;z-index:30;box-shadow:0 12px 40px rgba(0,0,0,.32)}#start.running{width:52px;left:auto;border-radius:50%;font-size:20px;background:rgba(9,12,17,.66);color:#fff;border:1px solid var(--line);backdrop-filter:blur(16px)}
-#debug{position:absolute;left:14px;bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:21;font-size:9px;color:rgba(255,255,255,.44);display:none;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="app"><div id="stage">
 <video id="video" autoplay playsinline muted></video><div id="shade"></div>
-<div class="topbar"><div class="brand">LANDMARK FINDER<small>LOTTE WORLD TOWER · 555 m</small></div><div class="gps" id="gpsBadge">GPS WAIT</div></div>
-<div id="info"><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
-<div id="marker"><div id="label">LOTTE WORLD TOWER</div><svg viewBox="0 0 100 360" xmlns="http://www.w3.org/2000/svg"><path class="tower" d="M50 3 C47 16 43 32 39 50 C35 72 32 96 29 122 C26 151 24 184 23 220 C22 255 21 294 18 354 L82 354 C79 294 78 255 77 220 C76 184 74 151 71 122 C68 96 65 72 61 50 C57 32 53 16 50 3 Z"/><line class="centerline" x1="50" y1="3" x2="50" y2="354"/></svg></div>
-<div id="arrow"><span id="arrowIcon">→</span><span id="arrowText">롯데타워</span></div>
+<div class="topbar"><div class="brand">LANDMARK FINDER<small>SEOUL · GPS + COMPASS</small></div><div class="gps" id="gpsBadge">GPS WAIT</div></div>
+<div id="info"><div id="targetName">랜드마크 선택</div><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
+<div id="markers"></div>
+<div id="arrow"><span id="arrowIcon">→</span><span id="arrowText">랜드마크</span></div>
 <div id="status">시작을 눌러 위치와 방향 권한을 허용하세요</div>
-<button id="start">랜드마크 찾기 시작</button><div id="debug"></div>
+<div id="selector"></div>
+<button id="start">랜드마크 찾기 시작</button>
 </div></div>
 <script>
 (()=>{
-const LOTTE={lat:37.5125,lng:127.1025,height:555,name:'롯데월드타워'};
+const LANDMARKS=[
+ {id:'lotte',name:'롯데월드타워',short:'롯데타워',lat:37.5125,lng:127.1025,height:555,shape:'lotte'},
+ {id:'nseoul',name:'N서울타워',short:'N서울타워',lat:37.5512,lng:126.9882,height:237,shape:'needle'},
+ {id:'63',name:'63스퀘어',short:'63빌딩',lat:37.5198,lng:126.9401,height:249,shape:'block'},
+ {id:'trade',name:'트레이드타워',short:'트레이드타워',lat:37.5104,lng:127.0600,height:228,shape:'block'},
+ {id:'parc1',name:'파크원 타워1',short:'파크원',lat:37.5253,lng:126.9284,height:333,shape:'block'}
+];
 const HFOV=62,VFOV=50;
-const $=id=>document.getElementById(id),video=$('video'),start=$('start'),marker=$('marker'),arrow=$('arrow'),arrowIcon=$('arrowIcon'),arrowText=$('arrowText'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),debug=$('debug');
-let pos=null,heading=null,pitch=0,stream=null,running=false;
+const $=id=>document.getElementById(id),video=$('video'),start=$('start'),markersEl=$('markers'),selector=$('selector'),arrow=$('arrow'),arrowIcon=$('arrowIcon'),arrowText=$('arrowText'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge');
+let pos=null,heading=null,pitch=0,stream=null,running=false,selectedId='lotte';
+const markerEls=new Map();
 const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,wrap=a=>((a+540)%360)-180;
 function haversine(a,b){const R=6371000,p1=rad(a.lat),p2=rad(b.lat),dp=rad(b.lat-a.lat),dl=rad(b.lng-a.lng);const q=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.atan2(Math.sqrt(q),Math.sqrt(1-q))}
 function bearing(a,b){const p1=rad(a.lat),p2=rad(b.lat),dl=rad(b.lng-a.lng);const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (deg(Math.atan2(y,x))+360)%360}
 function fmtDistance(m){return m>=1000?`${m/1000<10?(m/1000).toFixed(1):Math.round(m/1000)}<span>km</span>`:`${Math.round(m/10)*10}<span>m</span>`}
-function update(){if(!pos){marker.classList.remove('show');arrow.classList.remove('show');return}const d=haversine(pos,LOTTE),b=bearing(pos,LOTTE);distanceEl.innerHTML=fmtDistance(d);meta.textContent=`방위 ${Math.round(b)}° · GPS ±${Math.round(pos.accuracy||0)}m`;gpsBadge.textContent='GPS ON';if(heading==null){status.textContent='방향 센서 대기 중 · 휴대폰을 움직여 보세요';marker.classList.remove('show');arrow.classList.remove('show');return}const delta=wrap(b-heading);const half=HFOV/2;debug.textContent=`heading ${heading.toFixed(0)}° / target ${b.toFixed(0)}° / Δ ${delta.toFixed(1)}°`;
-if(Math.abs(delta)<=half){arrow.classList.remove('show');marker.classList.add('show');const x=50+(delta/HFOV)*100;const angular=deg(2*Math.atan((LOTTE.height/2)/Math.max(d,1)));const pxPerDeg=innerHeight/VFOV;const h=Math.max(10,Math.min(innerHeight*.72,angular*pxPerDeg));const w=Math.max(5,h*(100/360));const pitchShift=Math.max(-innerHeight*.3,Math.min(innerHeight*.3,(pitch-80)*-7));marker.style.left=x+'%';marker.style.top=`calc(51% + ${pitchShift}px)`;marker.style.width=w+'px';marker.style.height=h+'px';status.textContent=`예상 크기 ${angular.toFixed(2)}° · 현재 방향과 일치`;
-}else{marker.classList.remove('show');arrow.classList.add('show');const right=delta>0;arrow.classList.toggle('right',right);arrow.classList.toggle('left',!right);arrowIcon.textContent=right?'→':'←';arrowText.textContent=`${LOTTE.name} ${Math.round(Math.abs(delta))}°`;status.textContent=right?'오른쪽으로 돌려보세요':'왼쪽으로 돌려보세요'} }
+function shapeSVG(shape){if(shape==='needle')return '<svg viewBox="0 0 100 360"><line class="tower" x1="50" y1="2" x2="50" y2="354"/><path class="tower" d="M43 118 L57 118 L64 142 L36 142 Z"/><path class="tower" d="M39 142 L61 142 L67 169 L33 169 Z"/><line class="centerline" x1="50" y1="2" x2="50" y2="354"/></svg>';if(shape==='block')return '<svg viewBox="0 0 100 360"><path class="tower" d="M30 8 L70 8 L78 354 L22 354 Z"/><line class="centerline" x1="50" y1="8" x2="50" y2="354"/></svg>';return '<svg viewBox="0 0 100 360"><path class="tower" d="M50 3 C47 16 43 32 39 50 C35 72 32 96 29 122 C26 151 24 184 23 220 C22 255 21 294 18 354 L82 354 C79 294 78 255 77 220 C76 184 74 151 71 122 C68 96 65 72 61 50 C57 32 53 16 50 3 Z"/><line class="centerline" x1="50" y1="3" x2="50" y2="354"/></svg>'}
+function buildUI(){LANDMARKS.forEach(l=>{const m=document.createElement('div');m.className='marker';m.dataset.id=l.id;m.innerHTML=`<div class="markerLabel">${l.short}</div>${shapeSVG(l.shape)}`;markersEl.appendChild(m);markerEls.set(l.id,m);const b=document.createElement('button');b.className='chip'+(l.id===selectedId?' active':'');b.dataset.id=l.id;b.textContent=l.short;b.addEventListener('click',()=>{selectedId=l.id;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x.dataset.id===selectedId));update()});selector.appendChild(b)})}
+function update(){if(!pos){markerEls.forEach(m=>m.classList.remove('show'));arrow.classList.remove('show');return}const selected=LANDMARKS.find(l=>l.id===selectedId)||LANDMARKS[0];const sd=haversine(pos,selected),sb=bearing(pos,selected);targetName.textContent=selected.name;distanceEl.innerHTML=fmtDistance(sd);meta.textContent=`방위 ${Math.round(sb)}° · GPS ±${Math.round(pos.accuracy||0)}m`;gpsBadge.textContent='GPS ON';
+if(heading==null){status.textContent='방향 센서 대기 중 · 휴대폰을 움직여 보세요';markerEls.forEach(m=>m.classList.remove('show'));arrow.classList.remove('show');return}
+let visibleCount=0;
+for(const l of LANDMARKS){const m=markerEls.get(l.id),d=haversine(pos,l),b=bearing(pos,l),delta=wrap(b-heading);m.classList.toggle('selected',l.id===selectedId);if(Math.abs(delta)<=HFOV/2){visibleCount++;m.classList.add('show');const x=50+(delta/HFOV)*100;const angular=deg(2*Math.atan((l.height/2)/Math.max(d,1)));const pxPerDeg=innerHeight/VFOV;const h=Math.max(10,Math.min(innerHeight*.68,angular*pxPerDeg));const w=Math.max(6,h*(100/360));const pitchShift=Math.max(-innerHeight*.28,Math.min(innerHeight*.28,(pitch-80)*-7));m.style.left=x+'%';m.style.top=`calc(51% + ${pitchShift}px)`;m.style.width=w+'px';m.style.height=h+'px'}else m.classList.remove('show')}
+const delta=wrap(sb-heading);if(Math.abs(delta)<=HFOV/2){arrow.classList.remove('show');status.textContent=visibleCount>1?`현재 화면에 랜드마크 ${visibleCount}개 예상`:'현재 방향과 일치'}else{arrow.classList.add('show');const right=delta>0;arrow.classList.toggle('right',right);arrow.classList.toggle('left',!right);arrowIcon.textContent=right?'→':'←';arrowText.textContent=`${selected.short} ${Math.round(Math.abs(delta))}°`;status.textContent=right?'오른쪽으로 돌려보세요':'왼쪽으로 돌려보세요'}}
 function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==='number'&&e.webkitCompassAccuracy>=0)h=e.webkitCompassHeading;else if(typeof e.alpha==='number')h=(360-e.alpha)%360;if(h!=null){heading=h;pitch=typeof e.beta==='number'?e.beta:0;update()}}
 async function requestOrientation(){try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한 거부')}window.addEventListener('deviceorientation',onOrientation,true)}catch(e){status.textContent='방향 센서 권한이 필요합니다'}}
-function startGPS(){if(!navigator.geolocation){status.textContent='이 브라우저는 GPS를 지원하지 않습니다';return}navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};update()},e=>{status.textContent='위치 권한을 허용해주세요'}, {enableHighAccuracy:true,maximumAge:1000,timeout:12000})}
+function startGPS(){if(!navigator.geolocation){status.textContent='이 브라우저는 GPS를 지원하지 않습니다';return}navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};update()},()=>{status.textContent='위치 권한을 허용해주세요'},{enableHighAccuracy:true,maximumAge:1000,timeout:12000})}
 async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});video.srcObject=stream;await video.play()}catch(e){status.textContent='카메라 권한을 허용해주세요'}}
-start.addEventListener('click',async()=>{if(!running){running=true;start.textContent='↻';start.classList.add('running');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera()}else{location.reload()}});
-window.addEventListener('resize',update);update();
+start.addEventListener('click',async()=>{if(!running){running=true;start.textContent='↻';start.classList.add('running');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera()}else location.reload()});
+window.addEventListener('resize',update);buildUI();update();
 })();
 </script>
 </body>
