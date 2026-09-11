@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#000" />
 <meta name="description" content="카메라를 비추면 서울의 랜드마크·산·쇼핑몰 방향과 거리를 보여주는 실험형 웹 AR 지도." />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,7 +11,7 @@
 <style>
 :root{color-scheme:dark;--glass:rgba(8,11,16,.58);--line:rgba(255,255,255,.18);--muted:rgba(255,255,255,.68)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Pretendard",sans-serif;color:#fff}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Pretendard",sans-serif;color:#fff;overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:manipulation}
 button{font:inherit}
 #app,#stage{position:fixed;inset:0;overflow:hidden;background:#000}
 #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
@@ -55,7 +55,7 @@ body.started #privacy{display:none!important}
   <div id="info"><div id="targetName">랜드마크 선택</div><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
 <div id="markers"></div><div id="edgeLeft" class="edgeStack left"></div><div id="edgeRight" class="edgeStack right"></div>
 <div id="status">시작을 눌러 위치와 방향 권한을 허용하세요</div><div id="calibrationToast">방향을 보정했어요</div>
-<div id="selectorWrap"><div class="filterBar"><button class="filterBtn active" data-filter="all">전체</button><button class="filterBtn" data-filter="building">건물</button><button class="filterBtn" data-filter="mountain">산</button><button class="filterBtn" data-filter="mall">쇼핑</button></div><div id="selector"></div></div>
+<div id="selectorWrap"><div class="filterBar"><button class="filterBtn active" data-filter="all">전체</button><button class="filterBtn" data-filter="building">건물</button><button class="filterBtn" data-filter="mountain">산</button><button class="filterBtn" data-filter="mall">쇼핑</button><button class="filterBtn" data-filter="park">공원</button></div><div id="selector"></div></div>
 <div id="privacy">카메라·위치·방향 정보는 이 기기에서만 계산하며 서버로 전송하지 않습니다.<br>표시는 센서 상태에 따라 실제 위치와 차이가 날 수 있습니다.</div><button id="start">랜드마크 찾기 시작</button>
 </div></div>
 <script>
@@ -74,7 +74,20 @@ const LANDMARKS=[
 {id:'coex',name:'스타필드 코엑스몰',short:'코엑스몰',lat:37.51192,lng:127.05922,type:'mall'},
 {id:'hyundai',name:'더현대 서울',short:'더현대서울',lat:37.52520,lng:126.92911,type:'mall'},
 {id:'times',name:'타임스퀘어',short:'타임스퀘어',lat:37.51783,lng:126.90538,type:'mall'},
-{id:'lwmall',name:'롯데월드몰',short:'롯데월드몰',lat:37.51417,lng:127.10407,type:'mall'}
+{id:'lwmall',name:'롯데월드몰',short:'롯데월드몰',lat:37.51417,lng:127.10407,type:'mall'},
+{id:'ifc',name:'IFC몰',short:'IFC몰',lat:37.52528,lng:126.92576,type:'mall'},
+{id:'ipark',name:'아이파크몰 용산',short:'아이파크몰',lat:37.52925,lng:126.96418,type:'mall'},
+{id:'dcube',name:'디큐브시티',short:'디큐브시티',lat:37.50667,lng:126.89083,type:'mall'},
+{id:'gimpo',name:'롯데몰 김포공항',short:'롯데몰김포',lat:37.56220,lng:126.80158,type:'mall'},
+{id:'wirye',name:'스타필드시티 위례',short:'스타필드위례',lat:37.48007,lng:127.14846,type:'mall'},
+{id:'seoulforest',name:'서울숲',short:'서울숲',lat:37.54430,lng:127.04150,type:'park'},
+{id:'olympic',name:'올림픽공원',short:'올림픽공원',lat:37.52080,lng:127.12150,type:'park'},
+{id:'yeouido',name:'여의도공원',short:'여의도공원',lat:37.52595,lng:126.92264,type:'park'},
+{id:'haneul',name:'하늘공원',short:'하늘공원',lat:37.56821,lng:126.88547,type:'park'},
+{id:'botanic',name:'서울식물원',short:'서울식물원',lat:37.57107,lng:126.83278,type:'park'},
+{id:'children',name:'서울어린이대공원',short:'어린이대공원',lat:37.54894,lng:127.08202,type:'park'},
+{id:'banpo',name:'반포한강공원',short:'반포한강공원',lat:37.50912,lng:126.99219,type:'park'},
+{id:'seokchon',name:'석촌호수',short:'석촌호수',lat:37.50850,lng:127.10420,type:'park'}
 ];
 const HFOV=62,VFOV=50;
 const $=id=>document.getElementById(id),video=$('video'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast');
@@ -88,7 +101,7 @@ function haversine(a,b){const R=6371000,p1=rad(a.lat),p2=rad(b.lat),dp=rad(b.lat
 function bearing(a,b){const p1=rad(a.lat),p2=rad(b.lat),dl=rad(b.lng-a.lng);const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (deg(Math.atan2(y,x))+360)%360}
 function fmtDistance(m){return m>=1000?`${m/1000<10?(m/1000).toFixed(1):Math.round(m/1000)}<span>km</span>`:`${Math.round(m/10)*10}<span>m</span>`}
 function shapeSVG(shape){if(shape==='needle')return '<svg viewBox="0 0 100 360"><line class="tower" x1="50" y1="2" x2="50" y2="354"/><path class="tower" d="M43 118 L57 118 L64 142 L36 142 Z"/><path class="tower" d="M39 142 L61 142 L67 169 L33 169 Z"/><line class="centerline" x1="50" y1="2" x2="50" y2="354"/></svg>';if(shape==='block')return '<svg viewBox="0 0 100 360"><path class="tower" d="M30 8 L70 8 L78 354 L22 354 Z"/><line class="centerline" x1="50" y1="8" x2="50" y2="354"/></svg>';return '<svg viewBox="0 0 100 360"><path class="tower" d="M50 3 C47 16 43 32 39 50 C35 72 32 96 29 122 C26 151 24 184 23 220 C22 255 21 294 18 354 L82 354 C79 294 78 255 77 220 C76 184 74 151 71 122 C68 96 65 72 61 50 C57 32 53 16 50 3 Z"/><line class="centerline" x1="50" y1="3" x2="50" y2="354"/></svg>'}
-function typeSymbol(type){return type==='mountain'?'△':type==='mall'?'●':'◇'}
+function typeSymbol(type){return type==='mountain'?'△':type==='mall'?'●':type==='park'?'✦':'◇'}
 function matches(l){return filter==='all'||l.type===filter}
 function buildUI(){
  LANDMARKS.forEach(l=>{let m=document.createElement('div');if(l.type==='building'){m.className='marker';m.innerHTML=`<div class="markerLabel">${l.short}</div>${shapeSVG(l.shape)}`}else{m.className='poiMarker';m.innerHTML=`<div class="poiSymbol">${typeSymbol(l.type)}</div><div class="poiLabel">${l.short} <span class="poiDistance"></span></div>`}m.dataset.id=l.id;markersEl.appendChild(m);markerEls.set(l.id,m)});
@@ -111,7 +124,7 @@ function update(){
   }else off.push({l,d,delta,side:delta<0?'left':'right'})
  }
  updateEdges(off);
- const sdelta=wrap(sb-heading);if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
+ const sdelta=wrap(sb-heading);if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':selected.type==='park'?'공원은 대표 지점 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
 }
 function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==='number'&&e.webkitCompassAccuracy>=0)h=e.webkitCompassHeading;else if(typeof e.alpha==='number')h=(360-e.alpha)%360;if(h!=null){rawHeading=h;rawPitch=typeof e.beta==='number'?e.beta:0;const corrected=(rawHeading+headingOffset+360)%360;heading=smoothAngle(heading,corrected);pitch=smoothValue(pitch,rawPitch);update()}}
 async function requestOrientation(){try{if(typeof DeviceOrientationEvent==='undefined')throw new Error('이 기기에서는 방향 센서를 사용할 수 없습니다');if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}window.addEventListener('deviceorientation',onOrientation,true);return true}catch(e){status.textContent=e.message||'방향 센서 권한이 필요합니다';return false}}
@@ -120,6 +133,10 @@ async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw 
 async function beginExperience(){if(running)return;if(!window.isSecureContext){alert('HTTPS 환경에서 열어주세요');return}document.body.classList.add('started');running=true;start.textContent='◎';start.setAttribute('aria-label','선택한 랜드마크 방향으로 보정');start.classList.add('running');privacy.classList.add('hidden');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}
 launchStart.addEventListener('click',beginExperience);
 start.addEventListener('click',()=>{if(!pos||rawHeading==null){showToast('위치·방향 정보를 기다리는 중이에요');return}const selected=LANDMARKS.find(l=>l.id===selectedId);if(!selected)return;const targetBearing=bearing(pos,selected);headingOffset=wrap(targetBearing-rawHeading);heading=(rawHeading+headingOffset+360)%360;showToast(`${selected.short} 기준으로 방향 보정`);update()});
+let lastTouchEnd=0;
+['gesturestart','gesturechange','gestureend'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=now},{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();
 })();
 </script>
