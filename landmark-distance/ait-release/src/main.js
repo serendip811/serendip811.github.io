@@ -21,6 +21,9 @@ try {
 }
 
 globalThis.__AIT_LOCATION__ = {
+  async getPermission() {
+    return await getCurrentLocation.getPermission();
+  },
   async requestPermission() {
     return await getCurrentLocation.openPermissionDialog();
   },
