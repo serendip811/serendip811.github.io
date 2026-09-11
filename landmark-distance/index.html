@@ -343,7 +343,7 @@ function startGPS(){return new Promise(resolve=>{
  watchId=navigator.geolocation.watchPosition(p=>{
   pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};
   if(!settled){settled=true;autoSelectNearestOnFirstFix();resolve(true)}
-  maybeOfferOrEnterParkMode();rebuildSelector();update()
+  maybeOfferOrEnterParkMode();update()
  },e=>{
   gpsBadge.textContent='GPS ERROR';const denied=e.code===1;
   status.textContent=denied?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다';
