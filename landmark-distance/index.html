@@ -331,10 +331,42 @@ gpsBadge.textContent='GPS ON';
  const sdelta=wrap(sb-heading);if(parkMode==='olympic'){status.textContent=Math.abs(sdelta)<=HFOV/2?`${selected.short} 방향 · ${km(sd)}`:`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · ${selected.short} ${km(sd)}`}else if(insideSelected){const child=nearestChild(selected);status.textContent=child?`${selected.short} 내부 · 가까운 장소 ${child.short} ${km(child.d)}`:`${selected.short} 내부에 있어요`}else if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':selected.type==='park'?'공원은 대표 지점 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
 }
 function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==='number'&&e.webkitCompassAccuracy>=0)h=e.webkitCompassHeading;else if(typeof e.alpha==='number')h=(360-e.alpha)%360;if(h!=null){rawHeading=h;rawPitch=typeof e.beta==='number'?e.beta:0;const corrected=(rawHeading+headingOffset+360)%360;heading=smoothAngle(heading,corrected);pitch=smoothValue(pitch,rawPitch);update()}}
-async function requestOrientation(){try{if(typeof DeviceOrientationEvent==='undefined')throw new Error('이 기기에서는 방향 센서를 사용할 수 없습니다');if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}window.addEventListener('deviceorientation',onOrientation,true);return true}catch(e){status.textContent=e.message||'방향 센서 권한이 필요합니다';return false}}
-function startGPS(){if(!navigator.geolocation){status.textContent='이 브라우저는 위치 기능을 지원하지 않습니다';return}if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};autoSelectNearestOnFirstFix();maybeOfferOrEnterParkMode();rebuildSelector();update()},e=>{gpsBadge.textContent='GPS ERROR';status.textContent=e.code===1?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다'},{enableHighAccuracy:true,maximumAge:1000,timeout:12000})}
-async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('카메라를 사용할 수 없는 브라우저입니다');stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});video.srcObject=stream;await video.play();return true}catch(e){status.textContent=e.name==='NotAllowedError'?'카메라 권한을 허용해주세요':(e.message||'카메라를 시작하지 못했습니다');return false}}
-async function beginExperience(){if(running)return;if(!window.isSecureContext){alert('HTTPS 환경에서 열어주세요');return}document.body.classList.add('started');running=true;start.textContent='◎';start.setAttribute('aria-label','랜드마크 위치 미세 보정');start.classList.add('running');privacy.classList.add('hidden');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}
+async function requestOrientation(){try{
+ if(typeof DeviceOrientationEvent==='undefined')throw new Error('이 기기에서는 방향 센서를 사용할 수 없습니다');
+ if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}
+ window.removeEventListener('deviceorientation',onOrientation,true);window.addEventListener('deviceorientation',onOrientation,true);return true
+}catch(e){showPermissionIssue('방향 센서 권한이 필요해요','토스 앱 또는 기기 설정에서 동작 및 방향 접근을 허용한 뒤 다시 시도해 주세요.');status.textContent=e.message||'방향 센서 권한이 필요합니다';return false}}
+function startGPS(){return new Promise(resolve=>{
+ if(!navigator.geolocation){showPermissionIssue('위치 기능을 사용할 수 없어요','이 기기에서는 현재 위치를 가져올 수 없습니다.');resolve(false);return}
+ if(watchId!=null)navigator.geolocation.clearWatch(watchId);
+ let settled=false;
+ watchId=navigator.geolocation.watchPosition(p=>{
+  pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};
+  if(!settled){settled=true;autoSelectNearestOnFirstFix();resolve(true)}
+  maybeOfferOrEnterParkMode();rebuildSelector();update()
+ },e=>{
+  gpsBadge.textContent='GPS ERROR';const denied=e.code===1;
+  status.textContent=denied?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다';
+  showPermissionIssue(denied?'위치 권한이 필요해요':'현재 위치를 가져오지 못했어요',denied?'토스 앱 설정에서 위치 권한을 허용한 뒤 다시 시도해 주세요.':'GPS 신호가 잘 잡히는 곳에서 다시 시도해 주세요.');
+  if(!settled){settled=true;resolve(false)}
+ },{enableHighAccuracy:true,maximumAge:1000,timeout:12000})
+})}
+async function startCamera(){try{
+ if(!navigator.mediaDevices?.getUserMedia)throw new Error('카메라를 사용할 수 없는 브라우저입니다');
+ if(stream)stream.getTracks().forEach(t=>t.stop());
+ stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});
+ video.srcObject=stream;await video.play();return true
+}catch(e){const denied=e.name==='NotAllowedError'||e.name==='SecurityError';status.textContent=denied?'카메라 권한을 허용해주세요':(e.message||'카메라를 시작하지 못했습니다');showPermissionIssue(denied?'카메라 권한이 필요해요':'카메라를 시작하지 못했어요',denied?'토스 앱 설정에서 카메라 권한을 허용한 뒤 다시 시도해 주세요.':'카메라를 사용할 수 있는지 확인한 뒤 다시 시도해 주세요.');return false}}
+async function requestAllPermissions(){
+ hidePermissionIssue();status.textContent='권한 확인 중…';
+ const orientationOk=await requestOrientation();
+ const gpsPromise=startGPS();
+ const cameraOk=await startCamera();
+ const gpsOk=await gpsPromise;
+ if(orientationOk&&gpsOk&&cameraOk){hidePermissionIssue();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}
+ return orientationOk&&gpsOk&&cameraOk
+}
+async function beginExperience(){if(running)return;if(!window.isSecureContext){alert('HTTPS 환경에서 열어주세요');return}document.body.classList.add('started');running=true;start.textContent='◎';start.setAttribute('aria-label','랜드마크 위치 미세 보정');start.classList.add('running');privacy.classList.add('hidden');await requestAllPermissions()}
 launchStart.addEventListener('click',beginExperience);
 start.addEventListener('click',openCalibration);
 parkModeEnter.addEventListener('click',()=>enterParkMode(false));parkModeExit.addEventListener('click',exitParkMode);
@@ -343,6 +375,8 @@ document.querySelectorAll('.calNudge').forEach(b=>b.addEventListener('click',()=
 calTap.addEventListener('click',beginTapCalibration);
 calReset.addEventListener('click',resetCalibration);
 calDone.addEventListener('click',closeCalibration);
+permissionRetry.addEventListener('click',requestAllPermissions);
+permissionClose.addEventListener('click',hidePermissionIssue);
 tapCalOverlay.addEventListener('click',e=>{if(tapCalibrating)applyTapCalibration(e.clientX,e.clientY)});
 
 
