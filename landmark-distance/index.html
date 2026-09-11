@@ -57,7 +57,7 @@ body.started #privacy{display:none!important}
     <h1>서울을<br>카메라로 찾아보세요</h1>
     <p>휴대폰을 움직이면 주변 랜드마크와 산, 쇼핑몰의 방향과 거리를 보여줍니다.</p>
     <button id="launchStart" class="launchBtn">랜드마크 찾기 시작</button>
-    <div class="launchPrivacy">카메라·위치·방향 정보는 기기 안에서만 사용됩니다.<br>센서 상태에 따라 실제 위치와 차이가 날 수 있습니다.<br>공원 경계 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> · ODbL</div>
+    <div class="launchPrivacy">카메라·위치·방향 정보는 기기 안에서만 사용됩니다.<br>센서 상태에 따라 실제 위치와 차이가 날 수 있습니다.<br>공원 경계·일부 위치 데이터 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> · ODbL</div>
   </div>
   <div id="info"><div id="targetName">랜드마크 선택</div><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
 <div id="markers"></div><div id="edgeLeft" class="edgeStack left"></div><div id="edgeRight" class="edgeStack right"></div>
@@ -100,11 +100,14 @@ const LANDMARKS=[
 [37.51170,127.11265],[37.51550,127.10980],[37.52145,127.11130],[37.52665,127.11620],
 [37.52695,127.12635],[37.52340,127.13235],[37.51660,127.13220],[37.51145,127.12525]
 ],children:[
-{id:'olympic-peacegate',name:'세계평화의문',short:'평화의 문',lat:37.51395,lng:127.11552,type:'parkpoi'},
-{id:'olympic-kspo',name:'KSPO DOME',short:'KSPO DOME',lat:37.51923,lng:127.12702,type:'parkpoi'},
-{id:'olympic-soma',name:'소마미술관',short:'소마미술관',lat:37.51545,lng:127.11585,type:'parkpoi'},
-{id:'olympic-baekje',name:'한성백제박물관',short:'한성백제박물관',lat:37.51544,lng:127.12084,type:'parkpoi'},
-{id:'olympic-mongchon',name:'몽촌토성',short:'몽촌토성',lat:37.52132,lng:127.12242,type:'parkpoi'}
+{id:'olympic-peacegate',name:'세계평화의문',short:'평화의 문',lat:37.51793,lng:127.11454,type:'parkpoi',source:'fixed'},
+{id:'olympic-kspo',name:'KSPO DOME',short:'KSPO DOME',lat:37.51923,lng:127.12747,type:'parkpoi',osmId:'way/75956855'},
+{id:'olympic-mongchon',name:'몽촌토성',short:'몽촌토성',lat:37.52274,lng:127.11871,type:'parkpoi',osmId:'node/6396462929'},
+{id:'olympic-baekje',name:'한성백제박물관',short:'한성백제박물관',lat:37.51545,lng:127.12073,type:'parkpoi',osmId:'way/415026027'},
+{id:'olympic-swim',name:'올림픽수영장',short:'올림픽수영장',lat:37.52091,lng:127.12664,type:'parkpoi',osmId:'way/75956856'},
+{id:'olympic-handball',name:'티켓링크 라이브 아레나',short:'핸드볼경기장',lat:37.51735,lng:127.12640,type:'parkpoi',osmId:'way/75956853'},
+{id:'olympic-woori',name:'우리금융아트홀',short:'우리금융아트홀',lat:37.51673,lng:127.12505,type:'parkpoi',osmId:'way/75956852'},
+{id:'olympic-hall',name:'올림픽홀',short:'올림픽홀',lat:37.51473,lng:127.12759,type:'parkpoi',osmId:'way/75956846'}
 ]},
 {id:'yeouido',name:'여의도공원',short:'여의도공원',lat:37.52595,lng:126.92264,type:'park',area:[
 [37.52155,126.91965],[37.52315,126.91780],[37.53020,126.92300],[37.52930,126.92595],
@@ -251,30 +254,6 @@ function maybeOfferOrEnterParkMode(){
  if(parkMode==='olympic')return;
  if(!parkModeDismissed&&nearArea(p,250)){parkModeOffer.classList.add('show')}else parkModeOffer.classList.remove('show')
 }
-async function refreshOlympicPois(){
- const p=olympicPark();if(!p)return;
- const q='[out:json][timeout:15];(nwr["name"](37.510,127.109,37.529,127.134););out center tags;';
- try{
-  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),9000);
-  const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(q),signal:ctrl.signal});
-  clearTimeout(timer);if(!res.ok)throw new Error('overpass '+res.status);
-  const data=await res.json();
-  const whitelist=['세계평화의문','평화의 문','KSPO DOME','소마미술관','한성백제박물관','몽촌토성','SK올림픽핸드볼경기장','올림픽수영장','우리금융아트홀'];
-  const found=[];
-  for(const el of data.elements||[]){
-   const name=el.tags&&el.tags.name;if(!name||!whitelist.includes(name))continue;
-   const lat=el.lat??el.center?.lat,lng=el.lon??el.center?.lon;if(lat==null||lng==null)continue;
-   const short=name==='세계평화의문'?'평화의 문':name;
-   found.push({id:'olympic-osm-'+el.type+'-'+el.id,name,short,lat,lng,type:'parkpoi',osm:true});
-  }
-  const byName=new Map();
-  [...p.children,...found].forEach(x=>{if(!byName.has(x.short)||x.osm)byName.set(x.short,x)});
-  p.children=[...byName.values()];
-  p.children.forEach(ensureMarkerFor);
-  if(parkMode==='olympic'){if(!p.children.find(x=>x.id===selectedId))selectedId=p.children[0]?.id||selectedId;rebuildSelector();update()}
- }catch(e){}
-}
-
 function fmtDistance(m){return m>=1000?`${m/1000<10?(m/1000).toFixed(1):Math.round(m/1000)}<span>km</span>`:`${Math.round(m/10)*10}<span>m</span>`}
 function shapeSVG(shape){
  const open=v=>`<svg viewBox="${v}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
@@ -344,7 +323,7 @@ let lastTouchEnd=0;
 ['gesturestart','gesturechange','gestureend'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault(),{passive:false}));
 document.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=now},{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
-window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();refreshOsmParkBoundaries();refreshOlympicPois();
+window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();refreshOsmParkBoundaries();
 })();
 </script>
 </body>
