@@ -20,7 +20,7 @@ button{font:inherit}
 .brand{font-size:13px;font-weight:760;letter-spacing:-.025em;text-shadow:0 2px 12px #000}.brand small{display:block;margin-top:3px;font-size:9px;font-weight:500;color:var(--muted);letter-spacing:.02em}
 .gps{font-size:9px;padding:5px 8px;border-radius:999px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(14px);color:var(--muted)}
 #info{position:absolute;top:calc(env(safe-area-inset-top) + 66px);left:50%;transform:translateX(-50%);z-index:22;text-align:center;white-space:nowrap;text-shadow:0 2px 14px #000;pointer-events:none}
-#targetName{font-size:10px;color:rgba(255,255,255,.74);margin-bottom:2px}#distance{font-size:32px;font-weight:780;letter-spacing:-.05em;line-height:1}#distance span{font-size:14px;margin-left:3px;color:rgba(255,255,255,.8)}#meta{margin-top:5px;font-size:10px;color:rgba(255,255,255,.62)}
+#targetName{font-size:10px;color:rgba(255,255,255,.74);margin-bottom:2px}#targetName.inside{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.94);color:#0b0d10;text-shadow:none;font-weight:760}#distance{font-size:32px;font-weight:780;letter-spacing:-.05em;line-height:1}#distance span{font-size:14px;margin-left:3px;color:rgba(255,255,255,.8)}#meta{margin-top:5px;font-size:10px;color:rgba(255,255,255,.62)}
 .marker{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);z-index:12;display:none;pointer-events:none;filter:drop-shadow(0 2px 10px rgba(0,0,0,.75))}.marker.show{display:block}.marker svg{width:100%;height:100%;overflow:visible}.tower{fill:rgba(255,255,255,.055);stroke:#fff;stroke-width:2.1;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}.centerline{fill:none;stroke:rgba(255,255,255,.32);stroke-width:1;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
 .markerLabel{position:absolute;left:50%;top:-28px;transform:translateX(-50%);font-size:10px;font-weight:650;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.56);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);white-space:nowrap}.marker.selected .tower{stroke-width:3}.marker.selected .markerLabel{background:rgba(255,255,255,.94);color:#0b0d10}
 .poiMarker{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);z-index:14;display:none;pointer-events:none;text-align:center;filter:drop-shadow(0 2px 10px rgba(0,0,0,.75))}.poiMarker.show{display:block}.poiSymbol{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin:auto;background:rgba(0,0,0,.58);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(10px);font-size:15px;font-weight:800}.poiMarker.selected .poiSymbol{background:#fff;color:#0b0d10}.poiLabel{margin-top:5px;font-size:10px;font-weight:650;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.54);border:1px solid rgba(255,255,255,.14);white-space:nowrap}.poiDistance{opacity:.65;font-weight:500}
@@ -91,18 +91,37 @@ const LANDMARKS=[
 {id:'dcube',name:'디큐브시티',short:'디큐브시티',lat:37.50667,lng:126.89083,type:'mall'},
 {id:'gimpo',name:'롯데몰 김포공항',short:'롯데몰김포',lat:37.56220,lng:126.80158,type:'mall'},
 {id:'wirye',name:'스타필드시티 위례',short:'스타필드위례',lat:37.48007,lng:127.14846,type:'mall'},
-{id:'seoulforest',name:'서울숲',short:'서울숲',lat:37.54430,lng:127.04150,type:'park'},
-{id:'olympic',name:'올림픽공원',short:'올림픽공원',lat:37.52080,lng:127.12150,type:'park'},
-{id:'yeouido',name:'여의도공원',short:'여의도공원',lat:37.52595,lng:126.92264,type:'park'},
+{id:'seoulforest',name:'서울숲',short:'서울숲',lat:37.54430,lng:127.04150,type:'park',area:[
+[37.54120,127.03475],[37.54415,127.03405],[37.54865,127.03700],[37.55015,127.04145],
+[37.54820,127.04610],[37.54435,127.04715],[37.54095,127.04375],[37.54020,127.03910]
+]},
+{id:'olympic',name:'올림픽공원',short:'올림픽공원',lat:37.52080,lng:127.12150,type:'park',area:[
+[37.51170,127.11265],[37.51550,127.10980],[37.52145,127.11130],[37.52665,127.11620],
+[37.52695,127.12635],[37.52340,127.13235],[37.51660,127.13220],[37.51145,127.12525]
+],children:[
+{name:'평화의 문',short:'평화의 문',lat:37.51395,lng:127.11552},
+{name:'KSPO DOME',short:'KSPO DOME',lat:37.51923,lng:127.12702}
+]},
+{id:'yeouido',name:'여의도공원',short:'여의도공원',lat:37.52595,lng:126.92264,type:'park',area:[
+[37.52155,126.91965],[37.52315,126.91780],[37.53020,126.92300],[37.52930,126.92595],
+[37.52725,126.92710],[37.52195,126.92275]
+]},
 {id:'haneul',name:'하늘공원',short:'하늘공원',lat:37.56821,lng:126.88547,type:'park'},
-{id:'botanic',name:'서울식물원',short:'서울식물원',lat:37.57107,lng:126.83278,type:'park'},
-{id:'children',name:'서울어린이대공원',short:'어린이대공원',lat:37.54894,lng:127.08202,type:'park'},
+{id:'botanic',name:'서울식물원',short:'서울식물원',lat:37.57107,lng:126.83278,type:'park',area:[
+[37.56510,126.82320],[37.57155,126.82220],[37.57820,126.82600],[37.57910,126.83515],
+[37.57450,126.84105],[37.56715,126.84000],[37.56370,126.83315]
+]},
+{id:'children',name:'서울어린이대공원',short:'어린이대공원',lat:37.54894,lng:127.08202,type:'park',area:[
+[37.54415,127.07700],[37.54710,127.07475],[37.55290,127.07605],[37.55500,127.08225],
+[37.55245,127.08850],[37.54615,127.08930],[37.54290,127.08410]
+]},
 {id:'banpo',name:'반포한강공원',short:'반포한강공원',lat:37.50912,lng:126.99219,type:'park'},
 {id:'seokchon',name:'석촌호수',short:'석촌호수',lat:37.50850,lng:127.10420,type:'park'}
 ];
 const HFOV=62,VFOV=50;
 const $=id=>document.getElementById(id),video=$('video'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast');
 let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,stream=null,watchId=null,running=false,selectedId='lotte',filter='all';
+const areaState=new Map();
 const markerEls=new Map();
 const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,wrap=a=>((a+540)%360)-180,km=m=>m>=1000?(m/1000<10?(m/1000).toFixed(1):Math.round(m/1000))+'km':Math.round(m/10)*10+'m';
 function smoothAngle(prev,next,a=.18){if(prev==null)return next;return (prev+wrap(next-prev)*a+360)%360}
@@ -110,6 +129,12 @@ function smoothValue(prev,next,a=.16){return prev==null?next:prev+(next-prev)*a}
 function showToast(msg){calibrationToast.textContent=msg;calibrationToast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>calibrationToast.classList.remove('show'),1800)}
 function haversine(a,b){const R=6371000,p1=rad(a.lat),p2=rad(b.lat),dp=rad(b.lat-a.lat),dl=rad(b.lng-a.lng);const q=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.atan2(Math.sqrt(q),Math.sqrt(1-q))}
 function bearing(a,b){const p1=rad(a.lat),p2=rad(b.lat),dl=rad(b.lng-a.lng);const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (deg(Math.atan2(y,x))+360)%360}
+function pointInPolygon(p,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const yi=poly[i][0],xi=poly[i][1],yj=poly[j][0],xj=poly[j][1];const cross=((yi>p.lat)!=(yj>p.lat))&&(p.lng<(xj-xi)*(p.lat-yi)/(yj-yi+1e-12)+xi);if(cross)inside=!inside}return inside}
+function pointSegDistanceMeters(p,a,b){const lat0=rad(p.lat),mx=111320*Math.cos(lat0),my=110540;const px=(p.lng)*mx,py=p.lat*my,ax=a[1]*mx,ay=a[0]*my,bx=b[1]*mx,by=b[0]*my;const vx=bx-ax,vy=by-ay,wx=px-ax,wy=py-ay;const vv=vx*vx+vy*vy||1;const t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/vv));const dx=px-(ax+t*vx),dy=py-(ay+t*vy);return Math.hypot(dx,dy)}
+function polygonEdgeDistance(p,poly){let best=Infinity;for(let i=0;i<poly.length;i++)best=Math.min(best,pointSegDistanceMeters(p,poly[i],poly[(i+1)%poly.length]));return best}
+function isInsideArea(l){if(!l.area||!pos)return false;const raw=pointInPolygon(pos,l.area),prev=areaState.get(l.id)||false;if(raw){areaState.set(l.id,true);return true}if(prev&&polygonEdgeDistance(pos,l.area)<=40){return true}areaState.set(l.id,false);return false}
+function nearestChild(l){if(!l.children||!l.children.length||!pos)return null;return l.children.map(c=>({...c,d:haversine(pos,c)})).sort((a,b)=>a.d-b.d)[0]}
+
 function fmtDistance(m){return m>=1000?`${m/1000<10?(m/1000).toFixed(1):Math.round(m/1000)}<span>km</span>`:`${Math.round(m/10)*10}<span>m</span>`}
 function shapeSVG(shape){
  const open=v=>`<svg viewBox="${v}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
@@ -137,17 +162,30 @@ function updateEdges(items){edgeLeft.innerHTML='';edgeRight.innerHTML='';for(con
 function update(){
  markerEls.forEach(m=>m.classList.remove('show'));edgeLeft.innerHTML='';edgeRight.innerHTML='';
  if(!pos)return;
- const selected=LANDMARKS.find(l=>l.id===selectedId)||LANDMARKS[0],sd=haversine(pos,selected),sb=bearing(pos,selected);targetName.textContent=`${typeSymbol(selected.type)} ${selected.name}`;distanceEl.innerHTML=fmtDistance(sd);meta.textContent=`방위 ${Math.round(sb)}° · GPS ±${Math.round(pos.accuracy||0)}m · 예상 위치`;gpsBadge.textContent='GPS ON';
+ const selected=LANDMARKS.find(l=>l.id===selectedId)||LANDMARKS[0],sd=haversine(pos,selected),sb=bearing(pos,selected),insideSelected=isInsideArea(selected);
+targetName.classList.toggle('inside',insideSelected);
+if(insideSelected){
+ targetName.textContent=`✓ ${selected.name} 안에 있어요`;
+ distanceEl.innerHTML='<span style="font-size:15px">현재 위치</span>';
+ const child=nearestChild(selected);
+ meta.textContent=child?`가까운 장소 · ${child.short} ${km(child.d)}`:`GPS ±${Math.round(pos.accuracy||0)}m · 공원 내부`;
+}else{
+ targetName.textContent=`${typeSymbol(selected.type)} ${selected.name}`;
+ distanceEl.innerHTML=fmtDistance(sd);
+ meta.textContent=`방위 ${Math.round(sb)}° · GPS ±${Math.round(pos.accuracy||0)}m · 예상 위치`;
+}
+gpsBadge.textContent='GPS ON';
  if(heading==null){status.textContent='방향 센서 대기 중 · 휴대폰을 움직여 보세요';return}
  let visibleCount=0;const off=[];
  for(const l of LANDMARKS.filter(matches)){
-  const m=markerEls.get(l.id),d=haversine(pos,l),b=bearing(pos,l),delta=wrap(b-heading);m.classList.toggle('selected',l.id===selectedId);
+  const m=markerEls.get(l.id),d=haversine(pos,l),b=bearing(pos,l),delta=wrap(b-heading),insideArea=isInsideArea(l);m.classList.toggle('selected',l.id===selectedId);
+  if(insideArea){m.classList.remove('show');continue}
   if(Math.abs(delta)<=HFOV/2){visibleCount++;m.classList.add('show');const x=50+(delta/HFOV)*100;const pitchShift=Math.max(-innerHeight*.25,Math.min(innerHeight*.25,(pitch-80)*6));m.style.left=x+'%';m.style.top=`calc(51% + ${pitchShift}px)`;
    if(l.type==='building'){const angular=deg(2*Math.atan((l.height/2)/Math.max(d,1))),h=Math.max(l.aspect&&l.aspect>1?18:10,Math.min(innerHeight*.66,angular*(innerHeight/VFOV))),aspect=l.aspect||(.278),w=Math.max(l.aspect&&l.aspect>1?34:6,h*aspect);m.style.width=w+'px';m.style.height=h+'px'}else{m.style.width='auto';m.style.height='auto';const pd=m.querySelector('.poiDistance');if(pd)pd.textContent=km(d)}
   }else off.push({l,d,delta,side:delta<0?'left':'right'})
  }
  updateEdges(off);
- const sdelta=wrap(sb-heading);if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':selected.type==='park'?'공원은 대표 지점 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
+ const sdelta=wrap(sb-heading);if(insideSelected){const child=nearestChild(selected);status.textContent=child?`${selected.short} 내부 · 가까운 장소 ${child.short} ${km(child.d)}`:`${selected.short} 내부에 있어요`}else if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':selected.type==='park'?'공원은 대표 지점 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
 }
 function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==='number'&&e.webkitCompassAccuracy>=0)h=e.webkitCompassHeading;else if(typeof e.alpha==='number')h=(360-e.alpha)%360;if(h!=null){rawHeading=h;rawPitch=typeof e.beta==='number'?e.beta:0;const corrected=(rawHeading+headingOffset+360)%360;heading=smoothAngle(heading,corrected);pitch=smoothValue(pitch,rawPitch);update()}}
 async function requestOrientation(){try{if(typeof DeviceOrientationEvent==='undefined')throw new Error('이 기기에서는 방향 센서를 사용할 수 없습니다');if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}window.addEventListener('deviceorientation',onOrientation,true);return true}catch(e){status.textContent=e.message||'방향 센서 권한이 필요합니다';return false}}
@@ -155,7 +193,7 @@ function startGPS(){if(!navigator.geolocation){status.textContent='이 브라우
 async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('카메라를 사용할 수 없는 브라우저입니다');stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});video.srcObject=stream;await video.play();return true}catch(e){status.textContent=e.name==='NotAllowedError'?'카메라 권한을 허용해주세요':(e.message||'카메라를 시작하지 못했습니다');return false}}
 async function beginExperience(){if(running)return;if(!window.isSecureContext){alert('HTTPS 환경에서 열어주세요');return}document.body.classList.add('started');running=true;start.textContent='◎';start.setAttribute('aria-label','선택한 랜드마크 방향으로 보정');start.classList.add('running');privacy.classList.add('hidden');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}
 launchStart.addEventListener('click',beginExperience);
-start.addEventListener('click',()=>{if(!pos||rawHeading==null){showToast('위치·방향 정보를 기다리는 중이에요');return}const selected=LANDMARKS.find(l=>l.id===selectedId);if(!selected)return;const targetBearing=bearing(pos,selected);headingOffset=wrap(targetBearing-rawHeading);heading=(rawHeading+headingOffset+360)%360;showToast(`${selected.short} 기준으로 방향 보정`);update()});
+start.addEventListener('click',()=>{if(!pos||rawHeading==null){showToast('위치·방향 정보를 기다리는 중이에요');return}const selected=LANDMARKS.find(l=>l.id===selectedId);if(!selected)return;if(isInsideArea(selected)){showToast(`${selected.short} 내부에서는 방향 보정을 생략해요`);return}const targetBearing=bearing(pos,selected);headingOffset=wrap(targetBearing-rawHeading);heading=(rawHeading+headingOffset+360)%360;showToast(`${selected.short} 기준으로 방향 보정`);update()});
 let lastTouchEnd=0;
 ['gesturestart','gesturechange','gestureend'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault(),{passive:false}));
 document.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=now},{passive:false});
