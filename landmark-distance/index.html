@@ -42,7 +42,7 @@ button{font:inherit}
 #launchIntro h1{margin:0;font-size:28px;line-height:1.12;letter-spacing:-.045em;font-weight:800}
 #launchIntro p{margin:13px 0 24px;max-width:310px;font-size:13px;line-height:1.55;color:rgba(255,255,255,.64);word-break:keep-all}
 #launchIntro .launchBtn{position:static;width:min(100%,320px);height:58px;border:0;border-radius:20px;background:#fff;color:#0b0d10;font-size:16px;font-weight:760;box-shadow:0 12px 40px rgba(0,0,0,.32)}
-#launchIntro .launchPrivacy{margin-top:14px;max-width:320px;font-size:10px;line-height:1.5;color:rgba(255,255,255,.42)}
+#launchIntro .launchPrivacy{margin-top:14px;max-width:320px;font-size:10px;line-height:1.5;color:rgba(255,255,255,.42)}#launchIntro .launchPrivacy a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 body:not(.started) #info,body:not(.started) #status,body:not(.started) #selectorWrap,body:not(.started) #edgeLeft,body:not(.started) #edgeRight,body:not(.started) #start,body:not(.started) #privacy,body:not(.started) .gps{display:none!important}
 body.started #launchIntro{display:none}
 body.started #privacy{display:none!important}
@@ -56,7 +56,7 @@ body.started #privacy{display:none!important}
     <h1>서울을<br>카메라로 찾아보세요</h1>
     <p>휴대폰을 움직이면 주변 랜드마크와 산, 쇼핑몰의 방향과 거리를 보여줍니다.</p>
     <button id="launchStart" class="launchBtn">랜드마크 찾기 시작</button>
-    <div class="launchPrivacy">카메라·위치·방향 정보는 기기 안에서만 사용됩니다.<br>센서 상태에 따라 실제 위치와 차이가 날 수 있습니다.</div>
+    <div class="launchPrivacy">카메라·위치·방향 정보는 기기 안에서만 사용됩니다.<br>센서 상태에 따라 실제 위치와 차이가 날 수 있습니다.<br>공원 경계 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> · ODbL</div>
   </div>
   <div id="info"><div id="targetName">랜드마크 선택</div><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
 <div id="markers"></div><div id="edgeLeft" class="edgeStack left"></div><div id="edgeRight" class="edgeStack right"></div>
@@ -135,6 +135,89 @@ function polygonEdgeDistance(p,poly){let best=Infinity;for(let i=0;i<poly.length
 function isInsideArea(l){if(!l.area||!pos)return false;const raw=pointInPolygon(pos,l.area),prev=areaState.get(l.id)||false;if(raw){areaState.set(l.id,true);return true}if(prev&&polygonEdgeDistance(pos,l.area)<=40){return true}areaState.set(l.id,false);return false}
 function nearestChild(l){if(!l.children||!l.children.length||!pos)return null;return l.children.map(c=>({...c,d:haversine(pos,c)})).sort((a,b)=>a.d-b.d)[0]}
 
+const OSM_AREA_CACHE_KEY='landmark-finder-osm-parks-v1',OSM_AREA_MAX_AGE=1000*60*60*24*30;
+const OSM_PARK_MAP={'서울숲':'seoulforest','올림픽공원':'olympic','여의도공원':'yeouido','서울식물원':'botanic','서울어린이대공원':'children'};
+
+function samePoint(a,b){return Math.abs(a[0]-b[0])<1e-7&&Math.abs(a[1]-b[1])<1e-7}
+function polygonArea(poly){let a=0;for(let i=0,j=poly.length-1;i<poly.length;j=i++)a+=(poly[j][1]*poly[i][0]-poly[i][1]*poly[j][0]);return Math.abs(a/2)}
+function stitchOuterWays(parts){
+ const pending=parts.filter(p=>p&&p.length>1).map(p=>p.slice()),rings=[];
+ while(pending.length){
+  let ring=pending.shift(),changed=true;
+  while(changed&&pending.length){
+   changed=false;
+   for(let i=0;i<pending.length;i++){
+    const p=pending[i],rs=ring[0],re=ring[ring.length-1],ps=p[0],pe=p[p.length-1];
+    if(samePoint(re,ps)){ring=ring.concat(p.slice(1));pending.splice(i,1);changed=true;break}
+    if(samePoint(re,pe)){ring=ring.concat(p.slice(0,-1).reverse());pending.splice(i,1);changed=true;break}
+    if(samePoint(rs,pe)){ring=p.slice(0,-1).concat(ring);pending.splice(i,1);changed=true;break}
+    if(samePoint(rs,ps)){ring=p.slice(1).reverse().concat(ring);pending.splice(i,1);changed=true;break}
+   }
+  }
+  if(ring.length>=4)rings.push(ring);
+ }
+ return rings;
+}
+function polygonFromOsmElement(el){
+ if(el.type==='way'&&Array.isArray(el.geometry)&&el.geometry.length>=4)return el.geometry.map(p=>[p.lat,p.lon]);
+ if(el.type==='relation'&&Array.isArray(el.members)){
+  const parts=el.members.filter(m=>(m.role==='outer'||!m.role)&&Array.isArray(m.geometry)).map(m=>m.geometry.map(p=>[p.lat,p.lon]));
+  const rings=stitchOuterWays(parts);
+  if(rings.length)return rings.sort((a,b)=>polygonArea(b)-polygonArea(a))[0];
+ }
+ return null;
+}
+function applyOsmAreas(areas){
+ let applied=0;
+ for(const [id,poly] of Object.entries(areas||{})){
+  const l=LANDMARKS.find(x=>x.id===id);
+  if(l&&Array.isArray(poly)&&poly.length>=4){l.area=poly;l.areaSource='osm';applied++}
+ }
+ if(applied&&pos)update();
+ return applied;
+}
+function readOsmAreaCache(){
+ try{
+  const c=JSON.parse(localStorage.getItem(OSM_AREA_CACHE_KEY)||'null');
+  if(c&&c.areas){applyOsmAreas(c.areas);return c}
+ }catch(e){}
+ return null;
+}
+async function refreshOsmParkBoundaries(force=false){
+ const cached=readOsmAreaCache();
+ if(!force&&cached&&Date.now()-cached.ts<OSM_AREA_MAX_AGE)return;
+ const names=Object.keys(OSM_PARK_MAP).join('|');
+ const q='[out:json][timeout:20];(nwr["name"~"^('+names+')$"](37.42,126.76,37.72,127.20););out geom tags;';
+ try{
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),10000);
+  const res=await fetch('https://overpass-api.de/api/interpreter',{
+   method:'POST',
+   headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+   body:'data='+encodeURIComponent(q),
+   signal:ctrl.signal
+  });
+  clearTimeout(timer);
+  if(!res.ok)throw new Error('overpass '+res.status);
+  const data=await res.json(),best={};
+  for(const el of data.elements||[]){
+   const name=el.tags&&el.tags.name,id=OSM_PARK_MAP[name];
+   if(!id)continue;
+   const poly=polygonFromOsmElement(el);
+   if(!poly||poly.length<4)continue;
+   const area=polygonArea(poly);
+   if(!best[id]||area>best[id].area)best[id]={area,poly,osmType:el.type,osmId:el.id};
+  }
+  const areas={},refs={};
+  for(const [id,v] of Object.entries(best)){areas[id]=v.poly;refs[id]={type:v.osmType,id:v.osmId}}
+  if(Object.keys(areas).length){
+   applyOsmAreas(areas);
+   localStorage.setItem(OSM_AREA_CACHE_KEY,JSON.stringify({ts:Date.now(),areas,refs}));
+  }
+ }catch(e){
+  // Keep bundled fallback polygons when Overpass is unavailable.
+ }
+}
+
 function fmtDistance(m){return m>=1000?`${m/1000<10?(m/1000).toFixed(1):Math.round(m/1000)}<span>km</span>`:`${Math.round(m/10)*10}<span>m</span>`}
 function shapeSVG(shape){
  const open=v=>`<svg viewBox="${v}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
@@ -198,7 +281,7 @@ let lastTouchEnd=0;
 ['gesturestart','gesturechange','gestureend'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault(),{passive:false}));
 document.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=now},{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
-window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();
+window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();refreshOsmParkBoundaries();
 })();
 </script>
 </body>
