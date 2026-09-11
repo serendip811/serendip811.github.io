@@ -83,7 +83,7 @@ function update(){
  let visibleCount=0;const off=[];
  for(const l of LANDMARKS.filter(matches)){
   const m=markerEls.get(l.id),d=haversine(pos,l),b=bearing(pos,l),delta=wrap(b-heading);m.classList.toggle('selected',l.id===selectedId);
-  if(Math.abs(delta)<=HFOV/2){visibleCount++;m.classList.add('show');const x=50+(delta/HFOV)*100;const pitchShift=Math.max(-innerHeight*.25,Math.min(innerHeight*.25,(pitch-80)*-6));m.style.left=x+'%';m.style.top=`calc(51% + ${pitchShift}px)`;
+  if(Math.abs(delta)<=HFOV/2){visibleCount++;m.classList.add('show');const x=50+(delta/HFOV)*100;const pitchShift=Math.max(-innerHeight*.25,Math.min(innerHeight*.25,(pitch-80)*6));m.style.left=x+'%';m.style.top=`calc(51% + ${pitchShift}px)`;
    if(l.type==='building'){const angular=deg(2*Math.atan((l.height/2)/Math.max(d,1))),h=Math.max(10,Math.min(innerHeight*.66,angular*(innerHeight/VFOV))),w=Math.max(6,h*(100/360));m.style.width=w+'px';m.style.height=h+'px'}else{m.style.width='auto';m.style.height='auto';const pd=m.querySelector('.poiDistance');if(pd)pd.textContent=km(d)}
   }else off.push({l,d,delta,side:delta<0?'left':'right'})
  }
