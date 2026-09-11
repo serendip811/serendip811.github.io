@@ -32,13 +32,27 @@ button{font:inherit}
 #privacy{position:absolute;left:22px;right:22px;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:28;text-align:center;font-size:10px;line-height:1.45;color:rgba(255,255,255,.58);text-shadow:0 1px 8px #000;pointer-events:none}#privacy.hidden{display:none}
 #calibrationToast{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 118px);transform:translateX(-50%);z-index:35;display:none;padding:8px 11px;border-radius:999px;background:rgba(0,0,0,.72);border:1px solid var(--line);backdrop-filter:blur(14px);font-size:10px;white-space:nowrap}#calibrationToast.show{display:block}
 .markerLabel::after,.poiLabel::after{content:" · 예상";opacity:.5;font-weight:500}
+#launchIntro{position:absolute;left:26px;right:26px;top:50%;transform:translateY(-50%);z-index:31;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0}
+#launchIntro h1{margin:0;font-size:28px;line-height:1.12;letter-spacing:-.045em;font-weight:800}
+#launchIntro p{margin:13px 0 24px;max-width:310px;font-size:13px;line-height:1.55;color:rgba(255,255,255,.64);word-break:keep-all}
+#launchIntro .launchBtn{position:static;width:min(100%,320px);height:58px;border:0;border-radius:20px;background:#fff;color:#0b0d10;font-size:16px;font-weight:760;box-shadow:0 12px 40px rgba(0,0,0,.32)}
+#launchIntro .launchPrivacy{margin-top:14px;max-width:320px;font-size:10px;line-height:1.5;color:rgba(255,255,255,.42)}
+body:not(.started) #info,body:not(.started) #status,body:not(.started) #selectorWrap,body:not(.started) #edgeLeft,body:not(.started) #edgeRight,body:not(.started) #start,body:not(.started) #privacy,body:not(.started) .gps{display:none!important}
+body.started #launchIntro{display:none}
+body.started #privacy{display:none!important}
 </style>
 </head>
 <body>
 <div id="app"><div id="stage">
 <video id="video" autoplay playsinline muted></video><div id="shade"></div>
 <div class="topbar"><div class="brand">LANDMARK FINDER<small>SEOUL · GPS + COMPASS</small></div><div class="gps" id="gpsBadge">GPS WAIT</div></div>
-<div id="info"><div id="targetName">랜드마크 선택</div><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
+<div id="launchIntro">
+    <h1>서울을<br>카메라로 찾아보세요</h1>
+    <p>휴대폰을 움직이면 주변 랜드마크와 산, 쇼핑몰의 방향과 거리를 보여줍니다.</p>
+    <button id="launchStart" class="launchBtn">랜드마크 찾기 시작</button>
+    <div class="launchPrivacy">카메라·위치·방향 정보는 기기 안에서만 사용됩니다.<br>센서 상태에 따라 실제 위치와 차이가 날 수 있습니다.</div>
+  </div>
+  <div id="info"><div id="targetName">랜드마크 선택</div><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
 <div id="markers"></div><div id="edgeLeft" class="edgeStack left"></div><div id="edgeRight" class="edgeStack right"></div>
 <div id="status">시작을 눌러 위치와 방향 권한을 허용하세요</div><div id="calibrationToast">방향을 보정했어요</div>
 <div id="selectorWrap"><div class="filterBar"><button class="filterBtn active" data-filter="all">전체</button><button class="filterBtn" data-filter="building">건물</button><button class="filterBtn" data-filter="mountain">산</button><button class="filterBtn" data-filter="mall">쇼핑</button></div><div id="selector"></div></div>
@@ -63,7 +77,7 @@ const LANDMARKS=[
 {id:'lwmall',name:'롯데월드몰',short:'롯데월드몰',lat:37.51417,lng:127.10407,type:'mall'}
 ];
 const HFOV=62,VFOV=50;
-const $=id=>document.getElementById(id),video=$('video'),start=$('start'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast');
+const $=id=>document.getElementById(id),video=$('video'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast');
 let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,stream=null,watchId=null,running=false,selectedId='lotte',filter='all';
 const markerEls=new Map();
 const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,wrap=a=>((a+540)%360)-180,km=m=>m>=1000?(m/1000<10?(m/1000).toFixed(1):Math.round(m/1000))+'km':Math.round(m/10)*10+'m';
@@ -103,7 +117,9 @@ function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==='number'
 async function requestOrientation(){try{if(typeof DeviceOrientationEvent==='undefined')throw new Error('이 기기에서는 방향 센서를 사용할 수 없습니다');if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}window.addEventListener('deviceorientation',onOrientation,true);return true}catch(e){status.textContent=e.message||'방향 센서 권한이 필요합니다';return false}}
 function startGPS(){if(!navigator.geolocation){status.textContent='이 브라우저는 위치 기능을 지원하지 않습니다';return}if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};update()},e=>{gpsBadge.textContent='GPS ERROR';status.textContent=e.code===1?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다'},{enableHighAccuracy:true,maximumAge:1000,timeout:12000})}
 async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('카메라를 사용할 수 없는 브라우저입니다');stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});video.srcObject=stream;await video.play();return true}catch(e){status.textContent=e.name==='NotAllowedError'?'카메라 권한을 허용해주세요':(e.message||'카메라를 시작하지 못했습니다');return false}}
-start.addEventListener('click',async()=>{if(!running){if(!window.isSecureContext){status.textContent='HTTPS 환경에서 열어주세요';return}running=true;start.textContent='◎';start.setAttribute('aria-label','선택한 랜드마크 방향으로 보정');start.classList.add('running');privacy.classList.add('hidden');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}else{if(!pos||rawHeading==null){showToast('위치·방향 정보를 기다리는 중이에요');return}const selected=LANDMARKS.find(l=>l.id===selectedId);if(!selected)return;const targetBearing=bearing(pos,selected);headingOffset=wrap(targetBearing-rawHeading);heading=(rawHeading+headingOffset+360)%360;showToast(`${selected.short} 기준으로 방향 보정`);update()}});
+async function beginExperience(){if(running)return;if(!window.isSecureContext){alert('HTTPS 환경에서 열어주세요');return}document.body.classList.add('started');running=true;start.textContent='◎';start.setAttribute('aria-label','선택한 랜드마크 방향으로 보정');start.classList.add('running');privacy.classList.add('hidden');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}
+launchStart.addEventListener('click',beginExperience);
+start.addEventListener('click',()=>{if(!pos||rawHeading==null){showToast('위치·방향 정보를 기다리는 중이에요');return}const selected=LANDMARKS.find(l=>l.id===selectedId);if(!selected)return;const targetBearing=bearing(pos,selected);headingOffset=wrap(targetBearing-rawHeading);heading=(rawHeading+headingOffset+360)%360;showToast(`${selected.short} 기준으로 방향 보정`);update()});
 window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();
 })();
 </script>
