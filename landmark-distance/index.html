@@ -59,7 +59,7 @@ body.demo:not(.demo-ready) #demoPicker{display:flex}
 #calPanel{position:absolute;left:14px;right:14px;bottom:calc(var(--safe-bottom) + 18px);z-index:44;display:none;padding:13px;border-radius:22px;background:rgba(8,11,16,.82);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 14px 44px rgba(0,0,0,.38)}
 #calPanel.show{display:block}
 .calHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.calTitle{font-size:12px;font-weight:780}.calValue{font-size:9px;color:rgba(255,255,255,.52)}
-.calGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.calAxis{display:grid;grid-template-columns:38px 1fr 38px;align-items:center;gap:5px;padding:5px;border-radius:15px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}
+.calGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.calAxis{display:grid;grid-template-columns:38px 1fr 38px;align-items:center;gap:5px;padding:5px;border-radius:15px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}
 .calAxis span{text-align:center;font-size:9px;color:rgba(255,255,255,.56);font-weight:700}.calNudge{height:36px;border:0;border-radius:11px;background:rgba(255,255,255,.1);color:#fff;font-size:16px;font-weight:750}
 .calActions{display:grid;grid-template-columns:1fr auto auto;gap:7px;margin-top:9px}.calTap,.calReset,.calDone{height:39px;border:0;border-radius:13px;font-size:10px;font-weight:760}.calTap{background:#fff;color:#0b0d10}.calReset,.calDone{padding:0 12px;background:rgba(255,255,255,.1);color:#fff}
 #tapCalOverlay{position:absolute;inset:0;z-index:41;display:none;pointer-events:none}#tapCalOverlay.show{display:block;pointer-events:auto;cursor:crosshair}
@@ -67,6 +67,7 @@ body.demo:not(.demo-ready) #demoPicker{display:flex}
 #tapCalHint{position:absolute;left:50%;top:calc(var(--safe-top) + 118px);transform:translateX(-50%);padding:9px 12px;border-radius:999px;background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(14px);font-size:10px;font-weight:700;white-space:nowrap;pointer-events:none}
 body.calibrating #selectorWrap,body.calibrating #status,body.calibrating #edgeLeft,body.calibrating #edgeRight,body.calibrating #parkModeOffer{display:none!important}
 body.calibrating #start{display:none!important}
+@media(max-width:390px){.calGrid{gap:5px}.calAxis{grid-template-columns:34px 1fr 34px}.calNudge{height:34px}}
 
 .markerLabel::after,.poiLabel::after{content:" · 예상";opacity:.5;font-weight:500}
 #launchIntro{position:absolute;left:26px;right:26px;top:50%;transform:translateY(-50%);z-index:31;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0}
@@ -102,6 +103,7 @@ body.started #privacy{display:none!important}
   <div class="calGrid">
     <div class="calAxis"><button class="calNudge" data-cal="left" aria-label="표시를 왼쪽으로">←</button><span>수평</span><button class="calNudge" data-cal="right" aria-label="표시를 오른쪽으로">→</button></div>
     <div class="calAxis"><button class="calNudge" data-cal="up" aria-label="표시를 위로">↑</button><span>수직</span><button class="calNudge" data-cal="down" aria-label="표시를 아래로">↓</button></div>
+    <div class="calAxis"><button class="calNudge" data-cal="smaller" aria-label="실루엣을 작게">−</button><span>크기</span><button class="calNudge" data-cal="larger" aria-label="실루엣을 크게">＋</button></div>
   </div>
   <div class="calActions"><button id="calTap" class="calTap">실제 위치 탭</button><button id="calReset" class="calReset">초기화</button><button id="calDone" class="calDone">완료</button></div>
 </div><div id="parkModeBar"><span id="parkModeLabel">올림픽공원 모드</span><button id="parkModeExit">서울 전체</button></div><div id="parkModeOffer"><span>올림픽공원 근처예요</span><button id="parkModeEnter">공원 모드</button></div>
@@ -170,7 +172,7 @@ const LANDMARKS=[
 ];
 const HFOV=62,VFOV=50;
 const $=id=>document.getElementById(id),video=$('video'),demoImage=$('demoImage'),demoFile=$('demoFile'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast'),calPanel=$('calPanel'),calValue=$('calValue'),calTap=$('calTap'),calReset=$('calReset'),calDone=$('calDone'),tapCalOverlay=$('tapCalOverlay'),permissionCard=$('permissionCard'),permissionTitle=$('permissionTitle'),permissionMessage=$('permissionMessage'),permissionRetry=$('permissionRetry'),permissionClose=$('permissionClose'),parkModeBar=$('parkModeBar'),parkModeLabel=$('parkModeLabel'),parkModeExit=$('parkModeExit'),parkModeOffer=$('parkModeOffer'),parkModeEnter=$('parkModeEnter');
-let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,verticalOffsetPx=0,stream=null,watchId=null,running=false,selectedId='lotte',filter='all',parkMode=null,parkModeDismissed=false,calibrating=false,tapCalibrating=false,didAutoSelectNearest=false;
+let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,verticalOffsetPx=0,buildingScale=1,stream=null,watchId=null,running=false,selectedId='lotte',filter='all',parkMode=null,parkModeDismissed=false,calibrating=false,tapCalibrating=false,didAutoSelectNearest=false;
 const DEMO_MODE=new URLSearchParams(location.search).get('demo')==='1';
 let demoObjectUrl=null;
 
@@ -209,15 +211,15 @@ const CAL_KEY='landmark-finder-calibration-v1';
 function loadCalibration(){
  try{
   const c=JSON.parse(localStorage.getItem(CAL_KEY)||'null');
-  if(c){headingOffset=Number(c.headingOffset)||0;verticalOffsetPx=Number(c.verticalOffsetPx)||0}
+  if(c){headingOffset=Number(c.headingOffset)||0;verticalOffsetPx=Number(c.verticalOffsetPx)||0;buildingScale=Math.max(.5,Math.min(2,Number(c.buildingScale)||1))}
  }catch(e){}
 }
 function saveCalibration(){
- try{localStorage.setItem(CAL_KEY,JSON.stringify({headingOffset,verticalOffsetPx,ts:Date.now()}))}catch(e){}
+ try{localStorage.setItem(CAL_KEY,JSON.stringify({headingOffset,verticalOffsetPx,buildingScale,ts:Date.now()}))}catch(e){}
  updateCalValue()
 }
 function updateCalValue(){
- if(calValue)calValue.textContent=`수평 ${headingOffset>=0?'+':''}${headingOffset.toFixed(1)}° · 수직 ${Math.round(verticalOffsetPx)}px`
+ if(calValue)calValue.textContent=`수평 ${headingOffset>=0?'+':''}${headingOffset.toFixed(1)}° · 수직 ${Math.round(verticalOffsetPx)}px · 크기 ${Math.round(buildingScale*100)}%`
 }
 function currentSelected(){
  if(parkMode==='olympic')return olympicPark()?.children?.find(l=>l.id===selectedId)||null;
@@ -236,11 +238,13 @@ function nudgeCalibration(dir){
  if(dir==='right')headingOffset=wrap(headingOffset-DEG);
  if(dir==='up')verticalOffsetPx=Math.max(-220,verticalOffsetPx-PX);
  if(dir==='down')verticalOffsetPx=Math.min(220,verticalOffsetPx+PX);
+ if(dir==='smaller')buildingScale=Math.max(.5,Math.round((buildingScale-.05)*100)/100);
+ if(dir==='larger')buildingScale=Math.min(2,Math.round((buildingScale+.05)*100)/100);
  if(rawHeading!=null)heading=(rawHeading+headingOffset+360)%360;
  saveCalibration();update()
 }
 function resetCalibration(){
- headingOffset=0;verticalOffsetPx=0;
+ headingOffset=0;verticalOffsetPx=0;buildingScale=1;
  if(rawHeading!=null)heading=rawHeading;
  saveCalibration();showToast('보정값을 초기화했어요');update()
 }
@@ -359,7 +363,7 @@ gpsBadge.textContent='GPS ON';
  const off=candidates.filter(x=>!x.insideArea&&Math.abs(x.delta)>HFOV/2).map(x=>({...x,side:x.delta<0?'left':'right'}));
  for(const xitem of visible){
   const {l,m,d,delta}=xitem;m.classList.add('show');const x=50+(delta/HFOV)*100;const pitchShift=Math.max(-innerHeight*.25,Math.min(innerHeight*.25,(pitch-80)*6));m.style.left=x+'%';m.style.top=`calc(51% + ${pitchShift+verticalOffsetPx}px)`;
-  if(l.type==='building'){const angular=deg(2*Math.atan((l.height/2)/Math.max(d,1))),h=Math.max(l.aspect&&l.aspect>1?18:10,Math.min(innerHeight*.66,angular*(innerHeight/VFOV))),aspect=l.aspect||(.278),w=Math.max(l.aspect&&l.aspect>1?34:6,h*aspect);m.style.width=w+'px';m.style.height=h+'px'}
+  if(l.type==='building'){const angular=deg(2*Math.atan((l.height/2)/Math.max(d,1))),baseH=Math.max(l.aspect&&l.aspect>1?18:10,Math.min(innerHeight*.66,angular*(innerHeight/VFOV))),h=baseH*buildingScale,aspect=l.aspect||(.278),w=Math.max(l.aspect&&l.aspect>1?34:6,h*aspect);m.style.width=w+'px';m.style.height=h+'px'}
   else{m.style.width='auto';m.style.height='auto';const pd=m.querySelector('.poiDistance');if(pd)pd.textContent=km(d)}
  }
  updateEdges(off);
