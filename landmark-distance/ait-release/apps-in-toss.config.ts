@@ -9,6 +9,9 @@ export default defineConfig({
     bounces: false,
     pullToRefreshEnabled: false,
     overScrollMode: 'never',
+    allowsInlineMediaPlayback: true,
+    mediaPlaybackRequiresUserAction: false,
+    allowsBackForwardNavigationGestures: false,
   },
   permissions: [
     {
