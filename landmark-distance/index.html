@@ -348,7 +348,13 @@ function startGPS(){return new Promise(async resolve=>{
  const nativeLocation=globalThis.__AIT_LOCATION__;
  if(nativeLocation){
   try{
-   const permission=await nativeLocation.requestPermission();
+   status.textContent='위치 권한 확인 중…';
+   let permission='notDetermined';
+   try{permission=await nativeLocation.getPermission()}catch(e){}
+   if(permission!=='allowed'){
+    status.textContent='위치 권한 요청 중…';
+    permission=await nativeLocation.requestPermission();
+   }
    if(permission!=='allowed'){
     gpsBadge.textContent='GPS ERROR';
     status.textContent='위치 권한을 허용해주세요';
@@ -411,9 +417,10 @@ async function startCamera(){try{
 async function requestAllPermissions(){
  hidePermissionIssue();status.textContent='권한 확인 중…';
  const orientationOk=await requestOrientation();
- const gpsPromise=startGPS();
+ status.textContent='위치 권한 확인 중…';
+ const gpsOk=await startGPS();
+ status.textContent='카메라 권한 확인 중…';
  const cameraOk=await startCamera();
- const gpsOk=await gpsPromise;
  if(orientationOk&&gpsOk&&cameraOk){hidePermissionIssue();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}
  return orientationOk&&gpsOk&&cameraOk
 }
