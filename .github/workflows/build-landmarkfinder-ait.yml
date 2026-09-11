@@ -1,0 +1,40 @@
+name: Build Landmark Finder AIT
+
+on:
+  pull_request:
+    paths:
+      - 'landmark-distance/**'
+      - '.github/workflows/build-landmarkfinder-ait.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: landmark-distance/ait-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build .ait bundle
+        run: npm run build
+
+      - name: Show build outputs
+        run: find . -maxdepth 3 -type f -print
+
+      - name: Upload AIT bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: landmarkfinder-ait
+          path: landmark-distance/ait-release/*.ait
+          if-no-files-found: error
