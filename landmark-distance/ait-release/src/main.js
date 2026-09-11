@@ -1,4 +1,4 @@
-import { SafeAreaInsets } from '@apps-in-toss/web-framework';
+import { SafeAreaInsets, getCurrentLocation, startUpdateLocation } from '@apps-in-toss/web-framework';
 
 function applyInsets(insets) {
   if (!insets) return;
@@ -19,3 +19,23 @@ try {
 } catch {
   // Browser fallback uses CSS env(safe-area-inset-*).
 }
+
+globalThis.__AIT_LOCATION__ = {
+  async requestPermission() {
+    return await getCurrentLocation.openPermissionDialog();
+  },
+  async getCurrent() {
+    return await getCurrentLocation({ accuracy: 4 });
+  },
+  watch(onEvent, onError) {
+    return startUpdateLocation({
+      options: {
+        accuracy: 4,
+        timeInterval: 2000,
+        distanceInterval: 5,
+      },
+      onEvent,
+      onError,
+    });
+  },
+};
