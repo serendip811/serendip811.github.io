@@ -37,6 +37,7 @@ button{font:inherit}
 #start{position:absolute;left:18px;right:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);height:56px;border:0;border-radius:20px;background:#fff;color:#0b0d10;font-size:16px;font-weight:750;z-index:30;box-shadow:0 12px 40px rgba(0,0,0,.32)}#start.running{width:50px;left:auto;border-radius:50%;font-size:18px;background:rgba(9,12,17,.66);color:#fff;border:1px solid var(--line);backdrop-filter:blur(16px)}
 #privacy{position:absolute;left:22px;right:22px;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:28;text-align:center;font-size:10px;line-height:1.45;color:rgba(255,255,255,.58);text-shadow:0 1px 8px #000;pointer-events:none}#privacy.hidden{display:none}
 #calibrationToast{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 118px);transform:translateX(-50%);z-index:35;display:none;padding:8px 11px;border-radius:999px;background:rgba(0,0,0,.72);border:1px solid var(--line);backdrop-filter:blur(14px);font-size:10px;white-space:nowrap}#calibrationToast.show{display:block}
+#parkModeBar{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 60px);transform:translateX(-50%);z-index:34;display:none;align-items:center;gap:7px;padding:6px 7px 6px 10px;border-radius:999px;background:rgba(8,11,16,.72);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 28px rgba(0,0,0,.24)}#parkModeBar.show{display:flex}#parkModeLabel{font-size:10px;font-weight:750;white-space:nowrap}#parkModeExit{height:27px;border:0;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;padding:0 9px;font-size:9px;font-weight:700}#parkModeOffer{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 206px);transform:translateX(-50%);z-index:35;display:none;align-items:center;gap:8px;width:max-content;max-width:88%;padding:8px 8px 8px 11px;border-radius:17px;background:rgba(8,11,16,.76);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 10px 34px rgba(0,0,0,.3)}#parkModeOffer.show{display:flex}#parkModeOffer span{font-size:10px;color:rgba(255,255,255,.78);white-space:nowrap}#parkModeEnter{height:30px;border:0;border-radius:11px;background:#fff;color:#0b0d10;padding:0 10px;font-size:10px;font-weight:760}
 .markerLabel::after,.poiLabel::after{content:" · 예상";opacity:.5;font-weight:500}
 #launchIntro{position:absolute;left:26px;right:26px;top:50%;transform:translateY(-50%);z-index:31;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0}
 #launchIntro h1{margin:0;font-size:28px;line-height:1.12;letter-spacing:-.045em;font-weight:800}
@@ -60,7 +61,7 @@ body.started #privacy{display:none!important}
   </div>
   <div id="info"><div id="targetName">랜드마크 선택</div><div id="distance">—</div><div id="meta">현재 위치를 확인하는 중</div></div>
 <div id="markers"></div><div id="edgeLeft" class="edgeStack left"></div><div id="edgeRight" class="edgeStack right"></div>
-<div id="status">시작을 눌러 위치와 방향 권한을 허용하세요</div><div id="calibrationToast">방향을 보정했어요</div>
+<div id="status">시작을 눌러 위치와 방향 권한을 허용하세요</div><div id="calibrationToast">방향을 보정했어요</div><div id="parkModeBar"><span id="parkModeLabel">올림픽공원 모드</span><button id="parkModeExit">서울 전체</button></div><div id="parkModeOffer"><span>올림픽공원 근처예요</span><button id="parkModeEnter">공원 모드</button></div>
 <div id="selectorWrap"><div class="filterBar" role="tablist" aria-label="랜드마크 종류"><button class="filterBtn active" data-filter="all" role="tab" aria-selected="true">전체</button><button class="filterBtn" data-filter="building" role="tab" aria-selected="false">건물</button><button class="filterBtn" data-filter="mountain" role="tab" aria-selected="false">산</button><button class="filterBtn" data-filter="mall" role="tab" aria-selected="false">쇼핑</button><button class="filterBtn" data-filter="park" role="tab" aria-selected="false">공원</button></div><div id="selector" aria-label="랜드마크 목록"></div></div>
 <div id="privacy">카메라·위치·방향 정보는 이 기기에서만 계산하며 서버로 전송하지 않습니다.<br>표시는 센서 상태에 따라 실제 위치와 차이가 날 수 있습니다.</div><button id="start">랜드마크 찾기 시작</button>
 </div></div>
@@ -99,8 +100,11 @@ const LANDMARKS=[
 [37.51170,127.11265],[37.51550,127.10980],[37.52145,127.11130],[37.52665,127.11620],
 [37.52695,127.12635],[37.52340,127.13235],[37.51660,127.13220],[37.51145,127.12525]
 ],children:[
-{name:'평화의 문',short:'평화의 문',lat:37.51395,lng:127.11552},
-{name:'KSPO DOME',short:'KSPO DOME',lat:37.51923,lng:127.12702}
+{id:'olympic-peacegate',name:'세계평화의문',short:'평화의 문',lat:37.51395,lng:127.11552,type:'parkpoi'},
+{id:'olympic-kspo',name:'KSPO DOME',short:'KSPO DOME',lat:37.51923,lng:127.12702,type:'parkpoi'},
+{id:'olympic-soma',name:'소마미술관',short:'소마미술관',lat:37.51545,lng:127.11585,type:'parkpoi'},
+{id:'olympic-baekje',name:'한성백제박물관',short:'한성백제박물관',lat:37.51544,lng:127.12084,type:'parkpoi'},
+{id:'olympic-mongchon',name:'몽촌토성',short:'몽촌토성',lat:37.52132,lng:127.12242,type:'parkpoi'}
 ]},
 {id:'yeouido',name:'여의도공원',short:'여의도공원',lat:37.52595,lng:126.92264,type:'park',area:[
 [37.52155,126.91965],[37.52315,126.91780],[37.53020,126.92300],[37.52930,126.92595],
@@ -119,8 +123,8 @@ const LANDMARKS=[
 {id:'seokchon',name:'석촌호수',short:'석촌호수',lat:37.50850,lng:127.10420,type:'park'}
 ];
 const HFOV=62,VFOV=50;
-const $=id=>document.getElementById(id),video=$('video'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast');
-let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,stream=null,watchId=null,running=false,selectedId='lotte',filter='all';
+const $=id=>document.getElementById(id),video=$('video'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast'),parkModeBar=$('parkModeBar'),parkModeLabel=$('parkModeLabel'),parkModeExit=$('parkModeExit'),parkModeOffer=$('parkModeOffer'),parkModeEnter=$('parkModeEnter');
+let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,stream=null,watchId=null,running=false,selectedId='lotte',filter='all',parkMode=null,parkModeDismissed=false;
 const areaState=new Map();
 const markerEls=new Map();
 const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,wrap=a=>((a+540)%360)-180,km=m=>m>=1000?(m/1000<10?(m/1000).toFixed(1):Math.round(m/1000))+'km':Math.round(m/10)*10+'m';
@@ -218,6 +222,59 @@ async function refreshOsmParkBoundaries(force=false){
  }
 }
 
+
+function olympicPark(){return LANDMARKS.find(l=>l.id==='olympic')}
+function nearArea(l,meters=250){if(!l||!l.area||!pos)return false;if(pointInPolygon(pos,l.area))return true;return polygonEdgeDistance(pos,l.area)<=meters}
+function activeItems(){if(parkMode==='olympic'){const p=olympicPark();return (p&&p.children)||[]}return LANDMARKS.filter(matches)}
+function ensureMarkerFor(l){
+ if(markerEls.has(l.id))return markerEls.get(l.id);
+ const m=document.createElement('div');
+ if(l.type==='building'){m.className='marker';m.innerHTML=`<div class="markerLabel">${l.short}</div>${shapeSVG(l.shape)}`}
+ else{m.className='poiMarker';m.innerHTML=`<div class="poiSymbol">${typeSymbol(l.type)}</div><div class="poiLabel">${l.short} <span class="poiDistance"></span></div>`}
+ m.dataset.id=l.id;markersEl.appendChild(m);markerEls.set(l.id,m);return m
+}
+function enterParkMode(auto=false){
+ const p=olympicPark();if(!p)return;
+ parkMode='olympic';parkModeDismissed=false;filter='all';selectedId=(p.children&&p.children[0]&&p.children[0].id)||'olympic';
+ parkModeBar.classList.add('show');parkModeLabel.textContent='올림픽공원 모드';parkModeOffer.classList.remove('show');
+ document.querySelector('.filterBar').style.display='none';
+ p.children.forEach(ensureMarkerFor);rebuildSelector();if(!auto)showToast('올림픽공원 내부 모드로 전환했어요');update()
+}
+function exitParkMode(){
+ parkMode=null;parkModeDismissed=true;selectedId='olympic';parkModeBar.classList.remove('show');parkModeOffer.classList.remove('show');
+ document.querySelector('.filterBar').style.display='grid';rebuildSelector();update()
+}
+function maybeOfferOrEnterParkMode(){
+ const p=olympicPark();if(!p||!pos)return;
+ const inside=isInsideArea(p);
+ if(inside&&parkMode!=='olympic'){enterParkMode(true);return}
+ if(parkMode==='olympic')return;
+ if(!parkModeDismissed&&nearArea(p,250)){parkModeOffer.classList.add('show')}else parkModeOffer.classList.remove('show')
+}
+async function refreshOlympicPois(){
+ const p=olympicPark();if(!p)return;
+ const q='[out:json][timeout:15];(nwr["name"](37.510,127.109,37.529,127.134););out center tags;';
+ try{
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),9000);
+  const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(q),signal:ctrl.signal});
+  clearTimeout(timer);if(!res.ok)throw new Error('overpass '+res.status);
+  const data=await res.json();
+  const whitelist=['세계평화의문','평화의 문','KSPO DOME','소마미술관','한성백제박물관','몽촌토성','SK올림픽핸드볼경기장','올림픽수영장','우리금융아트홀'];
+  const found=[];
+  for(const el of data.elements||[]){
+   const name=el.tags&&el.tags.name;if(!name||!whitelist.includes(name))continue;
+   const lat=el.lat??el.center?.lat,lng=el.lon??el.center?.lon;if(lat==null||lng==null)continue;
+   const short=name==='세계평화의문'?'평화의 문':name;
+   found.push({id:'olympic-osm-'+el.type+'-'+el.id,name,short,lat,lng,type:'parkpoi',osm:true});
+  }
+  const byName=new Map();
+  [...p.children,...found].forEach(x=>{if(!byName.has(x.short)||x.osm)byName.set(x.short,x)});
+  p.children=[...byName.values()];
+  p.children.forEach(ensureMarkerFor);
+  if(parkMode==='olympic'){if(!p.children.find(x=>x.id===selectedId))selectedId=p.children[0]?.id||selectedId;rebuildSelector();update()}
+ }catch(e){}
+}
+
 function fmtDistance(m){return m>=1000?`${m/1000<10?(m/1000).toFixed(1):Math.round(m/1000)}<span>km</span>`:`${Math.round(m/10)*10}<span>m</span>`}
 function shapeSVG(shape){
  const open=v=>`<svg viewBox="${v}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">`;
@@ -232,22 +289,27 @@ function shapeSVG(shape){
  if(shape==='stadium')return open('0 0 220 105')+'<path class="tower" d="M18 70 Q34 39 110 34 Q186 39 202 70 Q177 91 110 92 Q43 91 18 70 Z"/><path class="tower" d="M40 69 Q56 51 110 48 Q164 51 180 69 Q157 80 110 81 Q63 80 40 69 Z"/><path class="centerline" d="M28 68 Q47 45 110 42 Q173 45 192 68 M63 87 L71 58 M157 87 L149 58"/></svg>';
  return open('0 0 100 360')+'<path class="tower" d="M50 3 C47 16 43 32 39 50 C35 72 32 96 29 122 C26 151 24 184 23 220 C22 255 21 294 18 354 L82 354 C79 294 78 255 77 220 C76 184 74 151 71 122 C68 96 65 72 61 50 C57 32 53 16 50 3 Z"/><line class="centerline" x1="50" y1="3" x2="50" y2="354"/></svg>'
 }
-function typeSymbol(type){return type==='mountain'?'△':type==='mall'?'●':type==='park'?'✦':'◇'}
-function matches(l){return filter==='all'||l.type===filter}
+function typeSymbol(type){return type==='mountain'?'△':type==='mall'?'●':type==='park'?'✦':type==='parkpoi'?'•':'◇'}
+function matches(l){if(parkMode)return false;return filter==='all'||l.type===filter}
 function buildUI(){
- LANDMARKS.forEach(l=>{let m=document.createElement('div');if(l.type==='building'){m.className='marker';m.innerHTML=`<div class="markerLabel">${l.short}</div>${shapeSVG(l.shape)}`}else{m.className='poiMarker';m.innerHTML=`<div class="poiSymbol">${typeSymbol(l.type)}</div><div class="poiLabel">${l.short} <span class="poiDistance"></span></div>`}m.dataset.id=l.id;markersEl.appendChild(m);markerEls.set(l.id,m)});
+ LANDMARKS.forEach(ensureMarkerFor);
  document.querySelectorAll('.filterBtn').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('.filterBtn').forEach(x=>{const on=x===b;x.classList.toggle('active',on);x.setAttribute('aria-selected',on?'true':'false')});const current=LANDMARKS.find(l=>l.id===selectedId);if(current&&!matches(current)){const first=LANDMARKS.find(matches);if(first)selectedId=first.id}rebuildSelector();update()}));
  rebuildSelector();
 }
-function rebuildSelector(){selector.innerHTML='';LANDMARKS.filter(matches).forEach(l=>{const b=document.createElement('button');b.className='chip'+(l.id===selectedId?' active':'');b.dataset.id=l.id;b.textContent=filter==='all'?`${typeSymbol(l.type)} ${l.short}`:l.short;b.setAttribute('aria-pressed',l.id===selectedId?'true':'false');b.addEventListener('click',()=>select(l.id));selector.appendChild(b)});requestAnimationFrame(()=>{const active=selector.querySelector('.chip.active');if(active)active.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})})}
+function rebuildSelector(){selector.innerHTML='';activeItems().forEach(l=>{const b=document.createElement('button');b.className='chip'+(l.id===selectedId?' active':'');b.dataset.id=l.id;b.textContent=parkMode?l.short:(filter==='all'?`${typeSymbol(l.type)} ${l.short}`:l.short);b.setAttribute('aria-pressed',l.id===selectedId?'true':'false');b.addEventListener('click',()=>select(l.id));selector.appendChild(b)});requestAnimationFrame(()=>{const active=selector.querySelector('.chip.active');if(active)active.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})})}
 function select(id){selectedId=id;document.querySelectorAll('.chip').forEach(x=>{const on=x.dataset.id===id;x.classList.toggle('active',on);x.setAttribute('aria-pressed',on?'true':'false')});const active=selector.querySelector('.chip.active');if(active)active.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});update()}
 function updateEdges(items){edgeLeft.innerHTML='';edgeRight.innerHTML='';for(const side of ['left','right']){const target=side==='left'?edgeLeft:edgeRight;items.filter(x=>x.side===side).sort((a,b)=>{if(a.l.id===selectedId)return -1;if(b.l.id===selectedId)return 1;return Math.abs(a.delta)-Math.abs(b.delta)}).slice(0,3).forEach(x=>{const b=document.createElement('button');b.className='edgePill'+(x.l.id===selectedId?' selected':'');b.innerHTML=`${side==='left'?'← ':''}${typeSymbol(x.l.type)} ${x.l.short}<span class="d">${km(x.d)}</span>${side==='right'?' →':''}`;b.addEventListener('click',()=>select(x.l.id));target.appendChild(b)})}}
 function update(){
  markerEls.forEach(m=>m.classList.remove('show'));edgeLeft.innerHTML='';edgeRight.innerHTML='';
  if(!pos)return;
- const selected=LANDMARKS.find(l=>l.id===selectedId)||LANDMARKS[0],sd=haversine(pos,selected),sb=bearing(pos,selected),insideSelected=isInsideArea(selected);
+ maybeOfferOrEnterParkMode();const selected=(parkMode==='olympic'?olympicPark().children.find(l=>l.id===selectedId):LANDMARKS.find(l=>l.id===selectedId))||LANDMARKS[0],sd=haversine(pos,selected),sb=bearing(pos,selected),insideSelected=!parkMode&&isInsideArea(selected);
 targetName.classList.toggle('inside',insideSelected);
-if(insideSelected){
+if(parkMode==='olympic'){
+ targetName.classList.remove('inside');
+ targetName.textContent=`• ${selected.name}`;
+ distanceEl.innerHTML=fmtDistance(sd);
+ meta.textContent=`올림픽공원 내부 · 방위 ${Math.round(sb)}° · GPS ±${Math.round(pos.accuracy||0)}m`;
+}else if(insideSelected){
  targetName.textContent=`✓ ${selected.name} 안에 있어요`;
  distanceEl.innerHTML='<span style="font-size:15px">현재 위치</span>';
  const child=nearestChild(selected);
@@ -260,28 +322,29 @@ if(insideSelected){
 gpsBadge.textContent='GPS ON';
  if(heading==null){status.textContent='방향 센서 대기 중 · 휴대폰을 움직여 보세요';return}
  let visibleCount=0;const off=[];
- for(const l of LANDMARKS.filter(matches)){
-  const m=markerEls.get(l.id),d=haversine(pos,l),b=bearing(pos,l),delta=wrap(b-heading),insideArea=isInsideArea(l);m.classList.toggle('selected',l.id===selectedId);
+ for(const l of activeItems()){
+  const m=ensureMarkerFor(l),d=haversine(pos,l),b=bearing(pos,l),delta=wrap(b-heading),insideArea=l.type==='park'?isInsideArea(l):false;m.classList.toggle('selected',l.id===selectedId);
   if(insideArea){m.classList.remove('show');continue}
   if(Math.abs(delta)<=HFOV/2){visibleCount++;m.classList.add('show');const x=50+(delta/HFOV)*100;const pitchShift=Math.max(-innerHeight*.25,Math.min(innerHeight*.25,(pitch-80)*6));m.style.left=x+'%';m.style.top=`calc(51% + ${pitchShift}px)`;
    if(l.type==='building'){const angular=deg(2*Math.atan((l.height/2)/Math.max(d,1))),h=Math.max(l.aspect&&l.aspect>1?18:10,Math.min(innerHeight*.66,angular*(innerHeight/VFOV))),aspect=l.aspect||(.278),w=Math.max(l.aspect&&l.aspect>1?34:6,h*aspect);m.style.width=w+'px';m.style.height=h+'px'}else{m.style.width='auto';m.style.height='auto';const pd=m.querySelector('.poiDistance');if(pd)pd.textContent=km(d)}
   }else off.push({l,d,delta,side:delta<0?'left':'right'})
  }
  updateEdges(off);
- const sdelta=wrap(sb-heading);if(insideSelected){const child=nearestChild(selected);status.textContent=child?`${selected.short} 내부 · 가까운 장소 ${child.short} ${km(child.d)}`:`${selected.short} 내부에 있어요`}else if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':selected.type==='park'?'공원은 대표 지점 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
+ const sdelta=wrap(sb-heading);if(parkMode==='olympic'){status.textContent=Math.abs(sdelta)<=HFOV/2?`${selected.short} 방향 · ${km(sd)}`:`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · ${selected.short} ${km(sd)}`}else if(insideSelected){const child=nearestChild(selected);status.textContent=child?`${selected.short} 내부 · 가까운 장소 ${child.short} ${km(child.d)}`:`${selected.short} 내부에 있어요`}else if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':selected.type==='park'?'공원은 대표 지점 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
 }
 function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==='number'&&e.webkitCompassAccuracy>=0)h=e.webkitCompassHeading;else if(typeof e.alpha==='number')h=(360-e.alpha)%360;if(h!=null){rawHeading=h;rawPitch=typeof e.beta==='number'?e.beta:0;const corrected=(rawHeading+headingOffset+360)%360;heading=smoothAngle(heading,corrected);pitch=smoothValue(pitch,rawPitch);update()}}
 async function requestOrientation(){try{if(typeof DeviceOrientationEvent==='undefined')throw new Error('이 기기에서는 방향 센서를 사용할 수 없습니다');if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}window.addEventListener('deviceorientation',onOrientation,true);return true}catch(e){status.textContent=e.message||'방향 센서 권한이 필요합니다';return false}}
-function startGPS(){if(!navigator.geolocation){status.textContent='이 브라우저는 위치 기능을 지원하지 않습니다';return}if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};update()},e=>{gpsBadge.textContent='GPS ERROR';status.textContent=e.code===1?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다'},{enableHighAccuracy:true,maximumAge:1000,timeout:12000})}
+function startGPS(){if(!navigator.geolocation){status.textContent='이 브라우저는 위치 기능을 지원하지 않습니다';return}if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(p=>{pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};maybeOfferOrEnterParkMode();update()},e=>{gpsBadge.textContent='GPS ERROR';status.textContent=e.code===1?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다'},{enableHighAccuracy:true,maximumAge:1000,timeout:12000})}
 async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw new Error('카메라를 사용할 수 없는 브라우저입니다');stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});video.srcObject=stream;await video.play();return true}catch(e){status.textContent=e.name==='NotAllowedError'?'카메라 권한을 허용해주세요':(e.message||'카메라를 시작하지 못했습니다');return false}}
 async function beginExperience(){if(running)return;if(!window.isSecureContext){alert('HTTPS 환경에서 열어주세요');return}document.body.classList.add('started');running=true;start.textContent='◎';start.setAttribute('aria-label','선택한 랜드마크 방향으로 보정');start.classList.add('running');privacy.classList.add('hidden');status.textContent='권한 요청 중…';await requestOrientation();startGPS();await startCamera();status.textContent='휴대폰을 천천히 돌려 주변 랜드마크를 찾아보세요'}
 launchStart.addEventListener('click',beginExperience);
-start.addEventListener('click',()=>{if(!pos||rawHeading==null){showToast('위치·방향 정보를 기다리는 중이에요');return}const selected=LANDMARKS.find(l=>l.id===selectedId);if(!selected)return;if(isInsideArea(selected)){showToast(`${selected.short} 내부에서는 방향 보정을 생략해요`);return}const targetBearing=bearing(pos,selected);headingOffset=wrap(targetBearing-rawHeading);heading=(rawHeading+headingOffset+360)%360;showToast(`${selected.short} 기준으로 방향 보정`);update()});
+start.addEventListener('click',()=>{if(!pos||rawHeading==null){showToast('위치·방향 정보를 기다리는 중이에요');return}const selected=parkMode==='olympic'?olympicPark().children.find(l=>l.id===selectedId):LANDMARKS.find(l=>l.id===selectedId);if(!selected)return;if(selected.type==='park'&&isInsideArea(selected)){showToast(`${selected.short} 내부에서는 방향 보정을 생략해요`);return}const targetBearing=bearing(pos,selected);headingOffset=wrap(targetBearing-rawHeading);heading=(rawHeading+headingOffset+360)%360;showToast(`${selected.short} 기준으로 방향 보정`);update()});
+parkModeEnter.addEventListener('click',()=>enterParkMode(false));parkModeExit.addEventListener('click',exitParkMode);
 let lastTouchEnd=0;
 ['gesturestart','gesturechange','gestureend'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault(),{passive:false}));
 document.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=now},{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
-window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();refreshOsmParkBoundaries();
+window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});buildUI();update();refreshOsmParkBoundaries();refreshOlympicPois();
 })();
 </script>
 </body>
