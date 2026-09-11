@@ -14,8 +14,10 @@
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Pretendard",sans-serif;color:#fff;overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:manipulation}
 button{font:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #app,#stage{position:fixed;inset:0;overflow:hidden;background:#000}
-#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
-#shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 24%,transparent 70%,rgba(0,0,0,.68))}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111;z-index:0;pointer-events:none}
+#video::-webkit-media-controls,#video::-webkit-media-controls-panel,#video::-webkit-media-controls-play-button,#video::-webkit-media-controls-start-playback-button,#video::-webkit-media-controls-overlay-play-button,#video::-webkit-media-controls-enclosure{display:none!important;-webkit-appearance:none!important;opacity:0!important;pointer-events:none!important}
+#cameraShield{position:absolute;inset:0;z-index:1;pointer-events:auto;background:transparent;touch-action:manipulation}
+#shade{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 24%,transparent 70%,rgba(0,0,0,.68))}
 .topbar{position:absolute;top:0;left:0;right:0;padding:calc(var(--safe-top) + 14px) calc(var(--safe-right) + 16px) 0 calc(var(--safe-left) + 16px);z-index:30;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
 .brand{font-size:13px;font-weight:760;letter-spacing:-.025em;text-shadow:0 2px 12px #000}.brand small{display:block;margin-top:3px;font-size:9px;font-weight:500;color:var(--muted);letter-spacing:.02em}
 .gps{font-size:9px;padding:5px 8px;border-radius:999px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(14px);color:var(--muted)}
@@ -73,7 +75,7 @@ body.started #privacy{display:none!important}
 </head>
 <body>
 <div id="app"><div id="stage">
-<video id="video" autoplay playsinline muted></video><div id="shade"></div>
+<video id="video" autoplay playsinline webkit-playsinline muted disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"></video><div id="cameraShield" aria-hidden="true"></div><div id="shade"></div>
 <div class="topbar"><div class="brand">LANDMARK FINDER<small>SEOUL · GPS + COMPASS</small></div><div class="gps" id="gpsBadge">GPS WAIT</div></div>
 <div id="launchIntro">
     <h1>서울을<br>카메라로 찾아보세요</h1>
@@ -358,10 +360,21 @@ function startGPS(){return new Promise(resolve=>{
  },{enableHighAccuracy:true,maximumAge:1000,timeout:12000})
 })}
 async function startCamera(){try{
+ video.controls=false;
+ video.setAttribute('playsinline','');
+ video.setAttribute('webkit-playsinline','');
+ video.disablePictureInPicture=true;
+ video.disableRemotePlayback=true;
  if(!navigator.mediaDevices?.getUserMedia)throw new Error('카메라를 사용할 수 없는 브라우저입니다');
  if(stream)stream.getTracks().forEach(t=>t.stop())
  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});
- video.srcObject=stream;await video.play();return true
+ video.srcObject=stream;
+ video.controls=false;
+ try{video.disablePictureInPicture=true}catch(e){}
+ try{video.disableRemotePlayback=true}catch(e){}
+ await video.play();
+ video.controls=false;
+ return true
 }catch(e){const denied=e.name==='NotAllowedError'||e.name==='SecurityError';status.textContent=denied?'카메라 권한을 허용해주세요':(e.message||'카메라를 시작하지 못했습니다');showPermissionIssue(denied?'카메라 권한이 필요해요':'카메라를 시작하지 못했어요',denied?'토스 앱 설정에서 카메라 권한을 허용한 뒤 다시 시도해 주세요.':'카메라를 사용할 수 있는지 확인한 뒤 다시 시도해 주세요.');return false}}
 async function requestAllPermissions(){
  hidePermissionIssue();status.textContent='권한 확인 중…';
@@ -385,6 +398,9 @@ permissionRetry.addEventListener('click',requestAllPermissions);
 permissionClose.addEventListener('click',hidePermissionIssue);
 
 tapCalOverlay.addEventListener('click',e=>{if(tapCalibrating)applyTapCalibration(e.clientX,e.clientY)});
+$('cameraShield').addEventListener('contextmenu',e=>e.preventDefault());
+$('cameraShield').addEventListener('dblclick',e=>e.preventDefault());
+
 
 
 window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});loadCalibration();updateCalValue();initSafeAreaBridge();buildUI();update();
