@@ -1,0 +1,15 @@
+{
+  "name": "landmarkfinder-ait-release",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node prepare.mjs && vite build && ait build"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "3.2.0"
+  },
+  "devDependencies": {
+    "vite": "7.1.7"
+  }
+}
