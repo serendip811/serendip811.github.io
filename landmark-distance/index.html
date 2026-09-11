@@ -162,7 +162,7 @@ const LANDMARKS=[
 ];
 const HFOV=62,VFOV=50;
 const $=id=>document.getElementById(id),video=$('video'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast'),calPanel=$('calPanel'),calValue=$('calValue'),calTap=$('calTap'),calReset=$('calReset'),calDone=$('calDone'),tapCalOverlay=$('tapCalOverlay'),permissionCard=$('permissionCard'),permissionTitle=$('permissionTitle'),permissionMessage=$('permissionMessage'),permissionRetry=$('permissionRetry'),permissionClose=$('permissionClose'),parkModeBar=$('parkModeBar'),parkModeLabel=$('parkModeLabel'),parkModeExit=$('parkModeExit'),parkModeOffer=$('parkModeOffer'),parkModeEnter=$('parkModeEnter');
-let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,verticalOffsetPx=0,buildingScale=1,stream=null,watchId=null,running=false,selectedId='lotte',filter='all',parkMode=null,parkModeDismissed=false,calibrating=false,tapCalibrating=false,didAutoSelectNearest=false;
+let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,verticalOffsetPx=0,buildingScale=1,stream=null,watchId=null,nativeLocationStop=null,running=false,selectedId='lotte',filter='all',parkMode=null,parkModeDismissed=false,calibrating=false,tapCalibrating=false,didAutoSelectNearest=false;
 
 const areaState=new Map();
 const markerEls=new Map();
@@ -344,7 +344,39 @@ async function requestOrientation(){try{
  if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}
  window.removeEventListener('deviceorientation',onOrientation,true);window.addEventListener('deviceorientation',onOrientation,true);return true
 }catch(e){showPermissionIssue('방향 센서 권한이 필요해요','토스 앱 또는 기기 설정에서 동작 및 방향 접근을 허용한 뒤 다시 시도해 주세요.');status.textContent=e.message||'방향 센서 권한이 필요합니다';return false}}
-function startGPS(){return new Promise(resolve=>{
+function startGPS(){return new Promise(async resolve=>{
+ const nativeLocation=globalThis.__AIT_LOCATION__;
+ if(nativeLocation){
+  try{
+   const permission=await nativeLocation.requestPermission();
+   if(permission!=='allowed'){
+    gpsBadge.textContent='GPS ERROR';
+    status.textContent='위치 권한을 허용해주세요';
+    showPermissionIssue('위치 권한이 필요해요','토스 앱의 위치 권한 요청에서 허용을 선택해 주세요.');
+    resolve(false);return
+   }
+   const first=await nativeLocation.getCurrent();
+   const coords=first&&first.coords;
+   if(coords){
+    pos={lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy};
+    autoSelectNearestOnFirstFix();maybeOfferOrEnterParkMode();update()
+   }
+   if(nativeLocationStop){try{nativeLocationStop()}catch(e){}}
+   nativeLocationStop=nativeLocation.watch(loc=>{
+    const c=loc&&loc.coords;if(!c)return;
+    pos={lat:c.latitude,lng:c.longitude,accuracy:c.accuracy};
+    maybeOfferOrEnterParkMode();update()
+   },e=>{
+    gpsBadge.textContent='GPS ERROR';
+    status.textContent='현재 위치를 가져오지 못했습니다'
+   });
+   resolve(true);return
+  }catch(e){
+   gpsBadge.textContent='GPS ERROR';
+   showPermissionIssue('위치 정보를 가져오지 못했어요',e?.message||'위치 권한을 확인한 뒤 다시 시도해 주세요.');
+   resolve(false);return
+  }
+ }
  if(!navigator.geolocation){showPermissionIssue('위치 기능을 사용할 수 없어요','이 기기에서는 현재 위치를 가져올 수 없습니다.');resolve(false);return}
  if(watchId!=null)navigator.geolocation.clearWatch(watchId);
  let settled=false;
@@ -355,7 +387,7 @@ function startGPS(){return new Promise(resolve=>{
  },e=>{
   gpsBadge.textContent='GPS ERROR';const denied=e.code===1;
   status.textContent=denied?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다';
-  showPermissionIssue(denied?'위치 권한이 필요해요':'현재 위치를 가져오지 못했어요',denied?'토스 앱 설정에서 위치 권한을 허용한 뒤 다시 시도해 주세요.':'GPS 신호가 잘 잡히는 곳에서 다시 시도해 주세요.');
+  showPermissionIssue(denied?'위치 권한이 필요해요':'현재 위치를 가져오지 못했어요',denied?'브라우저 또는 기기 설정에서 위치 권한을 허용한 뒤 다시 시도해 주세요.':'GPS 신호가 잘 잡히는 곳에서 다시 시도해 주세요.');
   if(!settled){settled=true;resolve(false)}
  },{enableHighAccuracy:true,maximumAge:1000,timeout:12000})
 })}
@@ -403,7 +435,7 @@ $('cameraShield').addEventListener('dblclick',e=>e.preventDefault());
 
 
 
-window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(stream)stream.getTracks().forEach(t=>t.stop())});loadCalibration();updateCalValue();initSafeAreaBridge();buildUI();update();
+window.addEventListener('resize',update);window.addEventListener('pagehide',()=>{if(watchId!=null)navigator.geolocation.clearWatch(watchId);if(nativeLocationStop){try{nativeLocationStop()}catch(e){}}if(stream)stream.getTracks().forEach(t=>t.stop())});loadCalibration();updateCalValue();initSafeAreaBridge();buildUI();update();
 })();
 </script>
 </body>
