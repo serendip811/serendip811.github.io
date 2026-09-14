@@ -162,13 +162,49 @@ const LANDMARKS=[
 ];
 const HFOV=62,VFOV=50;
 const $=id=>document.getElementById(id),video=$('video'),start=$('start'),launchStart=$('launchStart'),markersEl=$('markers'),selector=$('selector'),targetName=$('targetName'),distanceEl=$('distance'),meta=$('meta'),status=$('status'),gpsBadge=$('gpsBadge'),edgeLeft=$('edgeLeft'),edgeRight=$('edgeRight'),privacy=$('privacy'),calibrationToast=$('calibrationToast'),calPanel=$('calPanel'),calValue=$('calValue'),calTap=$('calTap'),calReset=$('calReset'),calDone=$('calDone'),tapCalOverlay=$('tapCalOverlay'),permissionCard=$('permissionCard'),permissionTitle=$('permissionTitle'),permissionMessage=$('permissionMessage'),permissionRetry=$('permissionRetry'),permissionClose=$('permissionClose'),parkModeBar=$('parkModeBar'),parkModeLabel=$('parkModeLabel'),parkModeExit=$('parkModeExit'),parkModeOffer=$('parkModeOffer'),parkModeEnter=$('parkModeEnter');
-let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,verticalOffsetPx=0,buildingScale=1,stream=null,watchId=null,nativeLocationStop=null,running=false,selectedId='lotte',filter='all',parkMode=null,parkModeDismissed=false,calibrating=false,tapCalibrating=false,didAutoSelectNearest=false;
+let pos=null,heading=null,pitch=0,rawHeading=null,rawPitch=null,headingOffset=0,verticalOffsetPx=0,buildingScale=1,stream=null,watchId=null,nativeLocationStop=null,running=false,selectedId='lotte',filter='all',parkMode=null,parkModeDismissed=false,calibrating=false,tapCalibrating=false,didAutoSelectNearest=false,lastHeadingTs=0,compassAccuracy=null,gpsCourse=null,gpsSpeed=0;
+const gpsSamples=[];
 
 const areaState=new Map();
 const markerEls=new Map();
 const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,wrap=a=>((a+540)%360)-180,km=m=>m>=1000?(m/1000<10?(m/1000).toFixed(1):Math.round(m/1000))+'km':Math.round(m/10)*10+'m';
 function smoothAngle(prev,next,a=.18){if(prev==null)return next;return (prev+wrap(next-prev)*a+360)%360}
 function smoothValue(prev,next,a=.16){return prev==null?next:prev+(next-prev)*a}
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function adaptiveAngle(prev,next,dtMs,accuracy){
+ if(prev==null)return next;
+ const d=Math.abs(wrap(next-prev));
+ let a=clamp(.10+d/55,.10,.58);
+ if(dtMs>0&&dtMs<40)a*=.85;
+ if(Number.isFinite(accuracy)&&accuracy>20)a*=.55;
+ return smoothAngle(prev,next,clamp(a,.06,.58))
+}
+function ingestCoords(c){
+ if(!c||!Number.isFinite(c.latitude)||!Number.isFinite(c.longitude))return;
+ const accuracy=Number.isFinite(c.accuracy)?Math.max(3,c.accuracy):25;
+ const speed=Number.isFinite(c.speed)?Math.max(0,c.speed):0;
+ const course=Number.isFinite(c.heading)&&c.heading>=0?(c.heading%360+360)%360:null;
+ gpsSpeed=speed;
+ if(course!=null&&speed>1.5)gpsCourse=course;
+ const sample={lat:c.latitude,lng:c.longitude,accuracy,ts:Date.now(),speed};
+ const goodEnough=accuracy<=80||gpsSamples.length===0;
+ if(goodEnough)gpsSamples.push(sample);
+ const maxSamples=speed>1.5?4:8;
+ while(gpsSamples.length>maxSamples)gpsSamples.shift();
+ if(!gpsSamples.length)gpsSamples.push(sample);
+ let sw=0,slat=0,slng=0;
+ for(const p of gpsSamples){
+  const age=Math.max(0,(Date.now()-p.ts)/1000);
+  const ageWeight=Math.exp(-age/8);
+  const w=ageWeight/(Math.max(3,p.accuracy)**2);
+  sw+=w;slat+=p.lat*w;slng+=p.lng*w
+ }
+ const filtered=sw>0?{lat:slat/sw,lng:slng/sw}:{lat:c.latitude,lng:c.longitude};
+ pos={...filtered,accuracy:Number.isFinite(c.accuracy)?c.accuracy:accuracy};
+ autoSelectNearestOnFirstFix();maybeOfferOrEnterParkMode();update()
+}
+
 function showToast(msg){calibrationToast.textContent=msg;calibrationToast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>calibrationToast.classList.remove('show'),1800)}
 
 function showPermissionIssue(title,message){permissionTitle.textContent=title;permissionMessage.textContent=message;permissionCard.classList.add('show')}
@@ -338,7 +374,29 @@ gpsBadge.textContent='GPS ON';
  updateEdges(off);
  const sdelta=wrap(sb-heading);if(parkMode==='olympic'){status.textContent=Math.abs(sdelta)<=HFOV/2?`${selected.short} 방향 · ${km(sd)}`:`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · ${selected.short} ${km(sd)}`}else if(insideSelected){const child=nearestChild(selected);status.textContent=child?`${selected.short} 내부 · 가까운 장소 ${child.short} ${km(child.d)}`:`${selected.short} 내부에 있어요`}else if(Math.abs(sdelta)<=HFOV/2){status.textContent=selected.type==='building'?`현재 방향과 일치 · 건물은 예상 크기 표시`:`현재 방향과 일치 · ${selected.type==='mountain'?'산은 정상 방향 중심':selected.type==='park'?'공원은 대표 지점 방향 중심':'쇼핑몰은 위치 방향 중심'}`}else status.textContent=`${sdelta>0?'오른쪽':'왼쪽'} ${Math.round(Math.abs(sdelta))}° · 가장자리 표시를 따라 돌려보세요`;
 }
-function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==='number'&&e.webkitCompassAccuracy>=0)h=e.webkitCompassHeading;else if(typeof e.alpha==='number')h=(360-e.alpha)%360;if(h!=null){rawHeading=h;rawPitch=typeof e.beta==='number'?e.beta:0;const corrected=(rawHeading+headingOffset+360)%360;heading=smoothAngle(heading,corrected);pitch=smoothValue(pitch,rawPitch);update()}}
+function onOrientation(e){
+ let h=null;
+ if(typeof e.webkitCompassHeading==='number'&&e.webkitCompassAccuracy>=0){
+  h=e.webkitCompassHeading;
+  compassAccuracy=Number.isFinite(e.webkitCompassAccuracy)?e.webkitCompassAccuracy:null
+ }else if(typeof e.alpha==='number'){
+  h=(360-e.alpha)%360;
+  compassAccuracy=null
+ }
+ if(h!=null){
+  const now=performance.now(),dt=lastHeadingTs?now-lastHeadingTs:16;lastHeadingTs=now;
+  rawHeading=h;rawPitch=typeof e.beta==='number'?e.beta:0;
+  let corrected=(rawHeading+headingOffset+360)%360;
+  if(gpsCourse!=null&&gpsSpeed>1.5){
+   const courseWeight=clamp((gpsSpeed-1.5)/8,.03,.18);
+   corrected=(corrected+wrap(gpsCourse-corrected)*courseWeight+360)%360
+  }
+  heading=adaptiveAngle(heading,corrected,dt,compassAccuracy);
+  const pd=Math.abs((rawPitch??0)-(pitch??rawPitch??0));
+  pitch=smoothValue(pitch,rawPitch,clamp(.10+pd/35,.10,.42));
+  update()
+ }
+}
 async function requestOrientation(){try{
  if(typeof DeviceOrientationEvent==='undefined')throw new Error('이 기기에서는 방향 센서를 사용할 수 없습니다');
  if(typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('방향 권한이 거부되었습니다')}
@@ -363,15 +421,11 @@ function startGPS(){return new Promise(async resolve=>{
    }
    const first=await nativeLocation.getCurrent();
    const coords=first&&first.coords;
-   if(coords){
-    pos={lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy};
-    autoSelectNearestOnFirstFix();maybeOfferOrEnterParkMode();update()
-   }
+   if(coords)ingestCoords(coords)
    if(nativeLocationStop){try{nativeLocationStop()}catch(e){}}
    nativeLocationStop=nativeLocation.watch(loc=>{
     const c=loc&&loc.coords;if(!c)return;
-    pos={lat:c.latitude,lng:c.longitude,accuracy:c.accuracy};
-    maybeOfferOrEnterParkMode();update()
+    ingestCoords(c)
    },e=>{
     gpsBadge.textContent='GPS ERROR';
     status.textContent='현재 위치를 가져오지 못했습니다'
@@ -387,9 +441,8 @@ function startGPS(){return new Promise(async resolve=>{
  if(watchId!=null)navigator.geolocation.clearWatch(watchId);
  let settled=false;
  watchId=navigator.geolocation.watchPosition(p=>{
-  pos={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};
-  if(!settled){settled=true;autoSelectNearestOnFirstFix();resolve(true)}
-  maybeOfferOrEnterParkMode();update()
+  ingestCoords(p.coords);
+  if(!settled){settled=true;resolve(true)}
  },e=>{
   gpsBadge.textContent='GPS ERROR';const denied=e.code===1;
   status.textContent=denied?'위치 권한을 허용해주세요':'현재 위치를 가져오지 못했습니다';
